@@ -843,12 +843,21 @@ function renderBody(){
     for(var j=mesVer.ini;j<=mesVer.fin;j++){ if(f.montos[j]!==null && f.montos[j]!==undefined) return true; }
     return false;
   }));
-  var h = '<tr class="sep si"><td colspan="'+(total+12-vis+3)+'">&#9650; Ingresos</td></tr>';
-  if(ings.length) h += ings.map(filaHTML).join('');
-  else h += '<tr class="dr"><td colspan="17" style="text-align:center;color:#B4B2A9;padding:8px;font-size:11px">Sin ingresos — agrega uno desde la barra inferior</td></tr>';
-  h += '<tr class="sep sg"><td colspan="'+(total+12-vis+3)+'">&#9660; Gastos</td></tr>';
-  if(gas.length) h += gas.map(filaHTML).join('');
-  else h += '<tr class="dr"><td colspan="17" style="text-align:center;color:#B4B2A9;padding:8px;font-size:11px">Sin gastos — agrega uno desde la barra inferior</td></tr>';
+  var h = '';
+  // Solo mostrar separador de Ingresos si hay filas
+  if(ings.length){
+    h += '<tr class="sep si"><td colspan="'+(total+12-vis+3)+'">&#9650; Ingresos</td></tr>';
+    h += ings.map(filaHTML).join('');
+  }
+  // Solo mostrar separador de Gastos si hay filas
+  if(gas.length){
+    h += '<tr class="sep sg"><td colspan="'+(total+12-vis+3)+'">&#9660; Gastos</td></tr>';
+    h += gas.map(filaHTML).join('');
+  }
+  // Si no hay nada visible mostrar mensaje
+  if(!ings.length && !gas.length){
+    h += '<tr class="dr"><td colspan="17" style="text-align:center;color:#B4B2A9;padding:20px;font-size:12px">Sin movimientos en el rango seleccionado</td></tr>';
+  }
   document.getElementById('tbody').innerHTML = h;
 }
 
@@ -1637,7 +1646,7 @@ function renderTop(d){
   dashCharts['top'] = new Chart(ctx, {
     type:'bar',
     data:{
-      labels: top10.map(function(p){return p[0].length>20?p[0].slice(0,20)+'…':p[0];}),
+      labels: top10.map(function(p){return p[0].length>22?p[0].slice(0,22)+'…':p[0];}),
       datasets:[{data:top10.map(function(p){return p[1];}),backgroundColor:'rgba(99,102,241,.75)',borderRadius:4}]
     },
     options:{indexAxis:'y',responsive:true,
@@ -1647,9 +1656,12 @@ function renderTop(d){
       if(cat) drillCategoria(cat, sbLastData||{qIni:mesVer.ini,qFin:mesVer.fin,porConcepto:{},planes:{}});
     },
     plugins:{legend:{display:false},
-      tooltip:{callbacks:{label:function(c){return '$'+dashFmtDec(c.parsed.x)+' — clic para desglose';}}}},
+      tooltip:{callbacks:{
+        title:function(items){ return top10[top10.length-1-items[0].dataIndex][0]; },
+        label:function(c){ return '  $'+dashFmtDec(c.parsed.x)+' — clic para desglose'; }
+      }}},
       scales:{x:{ticks:{callback:function(v){return '$'+dashFmt(v)},font:{size:10}},grid:{color:'#F0EEE8'}},
-              y:{ticks:{font:{size:10}},grid:{display:false}}}}
+              y:{ticks:{font:{size:10},maxRotation:0},grid:{display:false}}}}
   });
 }
 
@@ -1686,8 +1698,7 @@ function renderPlanes(d){
     // Progress bar
     var bar = '<div style="background:#E8E6DF;border-radius:3px;height:8px;margin-top:3px">'
       +'<div style="background:'+(pct>=100?'#1D9E75':'#3B82F6')+';width:'+Math.min(pct,100)+'%;height:8px;border-radius:3px"></div></div>';
-    var pkSafe = pk.replace(/'/g,"\'");
-    html += '<tr style="cursor:pointer" onclick="drillPlan(''+pkSafe+'', sbLastData)" title="Ver historial completo">'
+    html += '<tr style="cursor:pointer;transition:background .15s" onmouseenter="this.style.background='#F9F8F5'" onmouseleave="this.style.background=''" data-planpk="'+esc(pk)+'" onclick="window.drillPlanByKey(this.getAttribute('data-planpk'))" title="Clic para ver historial completo de este plan">'
       +'<td style="padding:6px 10px;border:1px solid #E8E6DF;max-width:200px">'
         +'<div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#2C2C2A" title="'+p.base+'">'+p.base+' <span style="font-size:10px;color:#3B82F6">→</span></div>'
         +'<div style="color:#888780;font-size:10px">Cargo '+maxCargo+' de '+p.total+bar+'</div>'
@@ -1792,6 +1803,20 @@ function renderDashInterno(){
 document.getElementById('btn-dash-refresh').addEventListener('click', renderDashInterno);
 document.getElementById('dash-anio').addEventListener('change', renderDashInterno);
 document.getElementById('dash-fuente').addEventListener('change', renderDashInterno);
+
+// Helper para onclick inline de planes (recibe pk como string)
+function drillPlanByKey(pk){
+  if(sbLastData && sbLastData.planes && sbLastData.planes[pk]){
+    drillPlan(pk, sbLastData);
+  }
+}
+window.drillPlanByKey = drillPlanByKey;
+
+// Exponer funciones de sidebar al scope global (necesario para onclick inline)
+window.sbClose      = sbClose;
+window.drillCategoria = drillCategoria;
+window.drillQuincena  = drillQuincena;
+window.drillPlan      = drillPlan;
 
 })(); // fin IIFE
 </script>
