@@ -351,6 +351,7 @@ button.del2:hover{background:#FAECE7;color:#D85A30}
       <option value="txs">Solo Movimientos Amex</option>
     </select>
     <button id="btn-dash-refresh" type="button" style="background:#1D9E75;color:#fff;border:none;border-radius:5px;font-size:11px;padding:5px 12px;cursor:pointer;font-family:Arial">↻ Actualizar</button>
+    <span id="dash-rango-lbl" style="font-size:10px;color:#888780;background:#fff;border:1px solid #D3D1C7;border-radius:4px;padding:3px 8px"></span>
   </div>
 
   <!-- KPIs -->
@@ -378,6 +379,12 @@ button.del2:hover{background:#FAECE7;color:#D85A30}
       <div class="dash-title">Top 10 Conceptos de Gasto</div>
       <canvas id="ch-top" height="260"></canvas>
     </div>
+  </div>
+
+  <!-- Planes de pago -->
+  <div class="dash-card" style="margin-bottom:12px" id="dash-planes-card">
+    <div class="dash-title">💳 Planes de Pago Activos</div>
+    <div id="dash-planes-body" style="font-size:11px;font-family:Arial"></div>
   </div>
 
   <!-- Tabla resumen por mes -->
@@ -1063,7 +1070,7 @@ function getFilt(){
       if(mes.indexOf(fm)!==0) return false;
     }
     return true;
-  }).sort(function(a,b){ return b.fecha.localeCompare(a.fecha); });
+  }).sort(function(a,b){ return fechaOrden(a).localeCompare(fechaOrden(b)); });
 }
 
 function renderDetalle(){
@@ -1129,20 +1136,24 @@ function dashFmt(n){ return new Intl.NumberFormat('es-MX',{minimumFractionDigits
 function dashFmtDec(n){ return new Intl.NumberFormat('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n||0); }
 
 function dashDatos(){
-  var fuente = document.getElementById('dash-fuente').value;
-  var anio   = parseInt(document.getElementById('dash-anio').value) || S.anio;
+  var fuente  = document.getElementById('dash-fuente').value;
+  var anio    = parseInt(document.getElementById('dash-anio').value) || S.anio;
+  // Rango de quincenas del selector del planeador
+  var qIni    = mesVer.ini;
+  var qFin    = mesVer.fin;
   var ingrMes = Array(24).fill(0);
   var gasMes  = Array(24).fill(0);
   var porConcepto = {};
+  var planes  = {};  // para planes de pago
 
   // Fuente: planeador (filas)
   if(fuente === 'plan' || fuente === 'ambos'){
     S.filas.forEach(function(f){
       var esIng = f.tipo === 'ingreso';
       for(var j=0;j<24;j++){
+        if(j < qIni || j > qFin) continue;  // respetar rango
         var v = f.montos[j] || 0;
         if(!v) continue;
-        // Para el planeador usamos el año activo del planeador
         if(esIng) ingrMes[j] += v;
         else {
           gasMes[j] += v;
@@ -1159,17 +1170,34 @@ function dashDatos(){
       var anioTx = anioDeAmex(t.fecha);
       if(anioTx !== anio) return;
       var quin = quinDeAmex(t.fecha);
+      if(quin < qIni || quin > qFin) return;  // respetar rango
       var v   = parseFloat(t.importe) || 0;
       if(t.tipo === 'Ingreso') ingrMes[quin] += v;
       else {
         gasMes[quin] += v;
         var cat = t.cat || 'Sin categoría';
         porConcepto[cat] = (porConcepto[cat]||0) + v;
+        // Detectar planes de pago: "CARGO 03 DE 06" o "3/6" etc.
+        var planM = t.desc.match(/CARGO\s+(\d+)\s+DE\s+(\d+)/i) ||
+                    t.desc.match(/(\d+)\s*\/\s*(\d+)\s*(MSI|MES|MESES)?/i) ||
+                    t.desc.match(/PLAN\s+(\d+)\s*(?:DE|\/)\s*(\d+)/i);
+        if(planM){
+          var actual = parseInt(planM[1]), total = parseInt(planM[2]);
+          if(actual>=1 && total>=2 && total<=60){
+            // Normalizar nombre del concepto sin el número de cargo
+            var base = t.desc.replace(/CARGO\s+\d+\s+DE\s+\d+/i,'').replace(/\d+\s*\/\s*\d+\s*(MSI|MES|MESES)?/i,'').trim();
+            base = base.replace(/\s{2,}/g,' ').substring(0,40);
+            var pk = base+'|||'+total;
+            if(!planes[pk]) planes[pk]={base:base,total:total,pagos:[],importeUn:v,totalAcum:0};
+            planes[pk].pagos.push({cargo:actual,fecha:t.fecha,importe:v,quin:quin});
+            planes[pk].totalAcum += v;
+          }
+        }
       }
     });
   }
 
-  return { ingrMes:ingrMes, gasMes:gasMes, porConcepto:porConcepto };
+  return { ingrMes:ingrMes, gasMes:gasMes, porConcepto:porConcepto, planes:planes, qIni:qIni, qFin:qFin };
 }
 
 function renderDashKPIs(d){
@@ -1317,6 +1345,57 @@ function renderTop(d){
   });
 }
 
+function renderPlanes(d){
+  var card = document.getElementById('dash-planes-card');
+  var body = document.getElementById('dash-planes-body');
+  var pares = Object.keys(d.planes);
+  if(!pares.length){
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = '';
+  // Sort by totalAcum desc
+  pares.sort(function(a,b){ return d.planes[b].totalAcum - d.planes[a].totalAcum; });
+
+  var html = '<table style="width:100%;border-collapse:collapse">'
+    +'<thead><tr style="background:#F5F4F0">'
+    +'<th style="padding:6px 10px;border:1px solid #E8E6DF;text-align:left">Concepto</th>'
+    +'<th style="padding:6px 10px;border:1px solid #E8E6DF;text-align:center;width:90px">Avance</th>'
+    +'<th style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;width:110px">Cargo unitario</th>'
+    +'<th style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;width:110px">Pagado (rango)</th>'
+    +'<th style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;width:110px">Total estimado</th>'
+    +'<th style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;width:110px">Pendiente</th>'
+    +'</tr></thead><tbody>';
+
+  pares.forEach(function(pk){
+    var p = d.planes[pk];
+    // Sort pagos by cargo number
+    p.pagos.sort(function(a,b){ return a.cargo - b.cargo; });
+    var maxCargo = p.pagos[p.pagos.length-1].cargo;
+    var pct = Math.round(maxCargo/p.total*100);
+    var totalEst = p.importeUn * p.total;
+    var pendiente = totalEst - p.totalAcum;
+    // Progress bar
+    var bar = '<div style="background:#E8E6DF;border-radius:3px;height:8px;margin-top:3px">'
+      +'<div style="background:'+(pct>=100?'#1D9E75':'#3B82F6')+';width:'+Math.min(pct,100)+'%;height:8px;border-radius:3px"></div></div>';
+    html += '<tr>'
+      +'<td style="padding:6px 10px;border:1px solid #E8E6DF;max-width:200px">'
+        +'<div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+p.base+'">'+p.base+'</div>'
+        +'<div style="color:#888780;font-size:10px">Cargo '+maxCargo+' de '+p.total+bar+'</div>'
+      +'</td>'
+      +'<td style="padding:6px 10px;border:1px solid #E8E6DF;text-align:center">'
+        +'<span style="font-weight:700;color:'+(pct>=100?'#1D9E75':'#3B82F6')+'">'+pct+'%</span>'
+      +'</td>'
+      +'<td style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right">$'+dashFmtDec(p.importeUn)+'</td>'
+      +'<td style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;color:#E8541A;font-weight:600">$'+dashFmtDec(p.totalAcum)+'</td>'
+      +'<td style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right">$'+dashFmtDec(totalEst)+'</td>'
+      +'<td style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;color:#8B1A1A;font-weight:600">$'+dashFmtDec(pendiente)+'</td>'
+      +'</tr>';
+  });
+  html += '</tbody></table>';
+  body.innerHTML = html;
+}
+
 function renderTablaResumen(d){
   // Agrupamos quincenas en 12 meses para la tabla de resumen
   var MESES_NOM = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -1385,11 +1464,18 @@ function renderDash(){
 
 function renderDashInterno(){
   var d = dashDatos();
+  // Show current range filter
+  var lbl = document.getElementById('dash-rango-lbl');
+  if(lbl){
+    var QLAB = function(q){ var mc=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; return mc[Math.floor(q/2)]+' '+(q%2===0?'1ª':'2ª'); };
+    lbl.textContent = (d.qIni===0 && d.qFin===23) ? 'Todo el año' : 'Mostrando: '+QLAB(d.qIni)+' → '+QLAB(d.qFin);
+  }
   renderDashKPIs(d);
   renderBarras(d);
   renderLinea(d);
   renderDona(d);
   renderTop(d);
+  renderPlanes(d);
   renderTablaResumen(d);
 }
 
