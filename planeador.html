@@ -1668,43 +1668,41 @@ function renderTop(d){
 function renderPlanes(d){
   var card = document.getElementById('dash-planes-card');
   var body = document.getElementById('dash-planes-body');
-  var pares = Object.keys(d.planes);
-  if(!pares.length){
-    card.style.display = 'none';
-    return;
-  }
-  card.style.display = '';
-  // Sort by totalAcum desc
+  var pares = Object.keys(d.planes||{});
+  if(!pares.length){ card.style.display='none'; return; }
+  card.style.display='';
   pares.sort(function(a,b){ return d.planes[b].totalAcum - d.planes[a].totalAcum; });
 
   var html = '<table style="width:100%;border-collapse:collapse">'
     +'<thead><tr style="background:#F5F4F0">'
     +'<th style="padding:6px 10px;border:1px solid #E8E6DF;text-align:left">Concepto</th>'
     +'<th style="padding:6px 10px;border:1px solid #E8E6DF;text-align:center;width:90px">Avance</th>'
-    +'<th style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;width:110px">Cargo unitario</th>'
-    +'<th style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;width:110px">Pagado (rango)</th>'
-    +'<th style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;width:110px">Total estimado</th>'
+    +'<th style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;width:110px">Por cargo</th>'
+    +'<th style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;width:110px">Pagado</th>'
+    +'<th style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;width:110px">Total est.</th>'
     +'<th style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;width:110px">Pendiente</th>'
     +'</tr></thead><tbody>';
 
   pares.forEach(function(pk){
     var p = d.planes[pk];
-    // Sort pagos by cargo number
     p.pagos.sort(function(a,b){ return a.cargo - b.cargo; });
     var maxCargo = p.pagos[p.pagos.length-1].cargo;
-    var pct = Math.round(maxCargo/p.total*100);
+    var pct      = Math.round(maxCargo/p.total*100);
     var totalEst = p.importeUn * p.total;
-    var pendiente = totalEst - p.totalAcum;
-    // Progress bar
+    var pendiente= totalEst - p.totalAcum;
+    var barColor = pct>=100 ? '#1D9E75' : '#3B82F6';
+    var barW     = Math.min(pct,100);
     var bar = '<div style="background:#E8E6DF;border-radius:3px;height:8px;margin-top:3px">'
-      +'<div style="background:'+(pct>=100?'#1D9E75':'#3B82F6')+';width:'+Math.min(pct,100)+'%;height:8px;border-radius:3px"></div></div>';
-    html += '<tr style="cursor:pointer;transition:background .15s" onmouseenter="this.style.background='#F9F8F5'" onmouseleave="this.style.background=''" data-planpk="'+esc(pk)+'" onclick="window.drillPlanByKey(this.getAttribute('data-planpk'))" title="Clic para ver historial completo de este plan">'
+      +'<div style="background:'+barColor+';width:'+barW+'%;height:8px;border-radius:3px"></div></div>';
+    // Store pk safely using data attribute
+    var pkEnc = pk.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    html += '<tr style="cursor:pointer" data-pk="'+pkEnc+'">'
       +'<td style="padding:6px 10px;border:1px solid #E8E6DF;max-width:200px">'
-        +'<div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#2C2C2A" title="'+p.base+'">'+p.base+' <span style="font-size:10px;color:#3B82F6">→</span></div>'
+        +'<div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#2C2C2A" title="'+p.base+'">'+p.base+' <span style="font-size:10px;color:#3B82F6">&#8594;</span></div>'
         +'<div style="color:#888780;font-size:10px">Cargo '+maxCargo+' de '+p.total+bar+'</div>'
       +'</td>'
       +'<td style="padding:6px 10px;border:1px solid #E8E6DF;text-align:center">'
-        +'<span style="font-weight:700;color:'+(pct>=100?'#1D9E75':'#3B82F6')+'">'+pct+'%</span>'
+        +'<span style="font-weight:700;color:'+barColor+'">'+pct+'%</span>'
       +'</td>'
       +'<td style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right">$'+dashFmtDec(p.importeUn)+'</td>'
       +'<td style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;color:#E8541A;font-weight:600">$'+dashFmtDec(p.totalAcum)+'</td>'
@@ -1712,8 +1710,19 @@ function renderPlanes(d){
       +'<td style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;color:#8B1A1A;font-weight:600">$'+dashFmtDec(pendiente)+'</td>'
       +'</tr>';
   });
+
   html += '</tbody></table>';
   body.innerHTML = html;
+
+  // Event delegation for row clicks (avoids inline onclick quote issues)
+  body.querySelectorAll('tr[data-pk]').forEach(function(tr){
+    tr.addEventListener('mouseenter', function(){ this.style.background='#F9F8F5'; });
+    tr.addEventListener('mouseleave', function(){ this.style.background=''; });
+    tr.addEventListener('click', function(){
+      var pk = this.getAttribute('data-pk');
+      if(sbLastData && sbLastData.planes && sbLastData.planes[pk]) drillPlan(pk, sbLastData);
+    });
+  });
 }
 
 function renderTablaResumen(d){
