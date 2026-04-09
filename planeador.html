@@ -140,6 +140,8 @@ button.del2:hover{background:#FAECE7;color:#D85A30}
 .dbtns button{flex:1;padding:8px;border-radius:6px;font-size:12px;cursor:pointer;font-family:Arial;font-weight:700;border:none}
 /* DASHBOARD */
 .dash-card{background:#fff;border:1px solid #D3D1C7;border-radius:8px;padding:14px 16px}
+#ch-barras,#ch-dona,#ch-top{cursor:pointer}
+.dash-title .hint{font-size:9px;color:#B4B2A9;font-weight:400;margin-left:4px}
 .dash-title{font-size:12px;font-weight:700;color:#2C2C2A;margin-bottom:10px;font-family:Arial}
 .kpi-card{background:#fff;border:1px solid #D3D1C7;border-radius:8px;padding:12px 16px;display:flex;flex-direction:column;gap:4px}
 .kpi-label{font-size:10px;color:#888780;font-family:Arial;text-transform:uppercase;letter-spacing:.5px}
@@ -155,9 +157,87 @@ button.del2:hover{background:#FAECE7;color:#D85A30}
 #dash-tabla tr:hover td{background:#F9F8F5}
 #dash-tabla td.pos{color:#1D9E75;font-weight:600}
 #dash-tabla td.neg{color:#8B1A1A;font-weight:600}
+
+/* SIDEBAR DRILL-DOWN */
+#dash-sidebar{
+  position:fixed;top:0;right:-480px;width:480px;height:100vh;
+  background:#fff;box-shadow:-4px 0 24px rgba(0,0,0,.18);
+  z-index:9999;transition:right .3s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;font-family:Arial
+}
+#dash-sidebar.open{right:0}
+#dash-sb-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:9998;
+  display:none;backdrop-filter:blur(2px)
+}
+#dash-sb-overlay.open{display:block}
+#dash-sb-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;border-bottom:2px solid #F0EEE8;flex-shrink:0
+}
+#dash-sb-title{font-size:14px;font-weight:700;color:#2C2C2A;flex:1}
+#dash-sb-subtitle{font-size:11px;color:#888780;margin-top:2px}
+#dash-sb-close{
+  width:30px;height:30px;border:none;background:#F1EFE8;border-radius:6px;
+  cursor:pointer;font-size:16px;color:#2C2C2A;line-height:30px;text-align:center
+}
+#dash-sb-close:hover{background:#E8E6DF}
+#dash-sb-summary{
+  padding:12px 18px;background:#F9F8F5;border-bottom:1px solid #E8E6DF;
+  flex-shrink:0;font-size:11px
+}
+#dash-sb-body{flex:1;overflow-y:auto;padding:14px 18px}
+.sb-row{
+  display:grid;grid-template-columns:90px 1fr 100px;
+  gap:6px;align-items:center;padding:7px 0;
+  border-bottom:1px solid #F0EEE8;font-size:11px
+}
+.sb-row:last-child{border-bottom:none}
+.sb-row .sb-fecha{color:#888780;white-space:nowrap}
+.sb-row .sb-desc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#2C2C2A}
+.sb-row .sb-imp{text-align:right;font-weight:600}
+.sb-row .sb-imp.ing{color:#1D9E75}
+.sb-row .sb-imp.gas{color:#E8541A}
+.sb-total{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 0;border-top:2px solid #E8E6DF;margin-top:4px;
+  font-weight:700;font-size:12px
+}
+.sb-badge{
+  display:inline-block;padding:2px 7px;border-radius:10px;
+  font-size:10px;font-weight:700;margin-left:6px
+}
+.sb-badge-cat{background:#EEF2FF;color:#4338CA}
+.sb-badge-q{background:#E1F5EE;color:#085041}
+.sb-progress{background:#E8E6DF;border-radius:4px;height:10px;margin:4px 0}
+.sb-progress-bar{height:10px;border-radius:4px;background:#3B82F6}
+.sb-plan-header{
+  display:grid;grid-template-columns:1fr 80px 110px 80px;
+  gap:4px;padding:5px 0;border-bottom:1px solid #E8E6DF;
+  font-size:10px;font-weight:700;color:#888780
+}
+.sb-plan-row{
+  display:grid;grid-template-columns:1fr 80px 110px 80px;
+  gap:4px;padding:6px 0;border-bottom:1px solid #F5F4F0;font-size:11px
+}
 </style>
 </head>
 <body>
+
+<!-- SIDEBAR DRILL-DOWN -->
+<div id="dash-sb-overlay"></div>
+<div id="dash-sidebar">
+  <div id="dash-sb-header">
+    <div>
+      <div id="dash-sb-title">Detalle</div>
+      <div id="dash-sb-subtitle"></div>
+    </div>
+    <button id="dash-sb-close" title="Cerrar">✕</button>
+  </div>
+  <div id="dash-sb-summary"></div>
+  <div id="dash-sb-body"></div>
+</div>
+
 
 
 <nav>
@@ -365,7 +445,7 @@ button.del2:hover{background:#FAECE7;color:#D85A30}
   <!-- Gráficas fila 1 -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
     <div class="dash-card">
-      <div class="dash-title">Ingresos vs Gastos por Mes</div>
+      <div class="dash-title">Ingresos vs Gastos por Mes <span class="hint">↑ clic para desglose</span></div>
       <canvas id="ch-barras" height="220"></canvas>
     </div>
     <div class="dash-card">
@@ -377,11 +457,11 @@ button.del2:hover{background:#FAECE7;color:#D85A30}
   <!-- Gráficas fila 2 -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
     <div class="dash-card">
-      <div class="dash-title">Gastos por Categoría / Concepto</div>
+      <div class="dash-title">Gastos por Categoría / Concepto <span class="hint">↑ clic para desglose</span></div>
       <canvas id="ch-dona" height="260"></canvas>
     </div>
     <div class="dash-card">
-      <div class="dash-title">Top 10 Conceptos de Gasto</div>
+      <div class="dash-title">Top 10 Conceptos de Gasto <span class="hint">↑ clic para desglose</span></div>
       <canvas id="ch-top" height="260"></canvas>
     </div>
   </div>
@@ -1139,6 +1219,189 @@ document.getElementById('btn-exp-det').addEventListener('click', function(){
 render();
 
 
+
+// ─── SIDEBAR DRILL-DOWN ──────────────────────────────────────────────────────
+var sbLastData = null;
+
+function sbOpen(titulo, subtitulo, summaryHtml, bodyHtml){
+  document.getElementById('dash-sb-title').textContent    = titulo;
+  document.getElementById('dash-sb-subtitle').textContent = subtitulo || '';
+  document.getElementById('dash-sb-summary').innerHTML    = summaryHtml || '';
+  document.getElementById('dash-sb-body').innerHTML       = bodyHtml;
+  document.getElementById('dash-sidebar').classList.add('open');
+  document.getElementById('dash-sb-overlay').classList.add('open');
+}
+
+function sbClose(){
+  document.getElementById('dash-sidebar').classList.remove('open');
+  document.getElementById('dash-sb-overlay').classList.remove('open');
+}
+
+document.getElementById('dash-sb-close').addEventListener('click', sbClose);
+document.getElementById('dash-sb-overlay').addEventListener('click', sbClose);
+
+// ─── Drill: Categoría (desde dona o top10) ───────────────────────────────────
+function drillCategoria(cat, d){
+  var movs = (S.txs || []).filter(function(t){
+    if(!t.cat || t.cat !== cat) return false;
+    var anio = anioDeAmex(t.fecha);
+    if(anio !== (parseInt(document.getElementById('dash-anio').value)||S.anio)) return false;
+    var q = quinDeAmex(t.fecha);
+    return q >= d.qIni && q <= d.qFin;
+  });
+  // Also from planeador filas
+  var filasMatch = S.filas.filter(function(f){
+    return f.tipo==='gasto' && (f.concepto||'').indexOf(cat)>=0;
+  });
+
+  movs.sort(function(a,b){ return fechaOrden(a).localeCompare(fechaOrden(b)); });
+  var total = movs.reduce(function(s,t){ return s+(parseFloat(t.importe)||0); }, 0);
+  var pct   = d.porConcepto && d.porConcepto[cat] && total > 0
+              ? Math.round(d.porConcepto[cat] / Object.values(d.porConcepto).reduce(function(a,b){return a+b;},0)*100)
+              : 0;
+
+  var summary = '<div style="display:flex;gap:20px;flex-wrap:wrap">'
+    +'<div><div style="font-size:10px;color:#888780">Movimientos</div><div style="font-size:18px;font-weight:700;color:#2C2C2A">'+movs.length+'</div></div>'
+    +'<div><div style="font-size:10px;color:#888780">Total gastado</div><div style="font-size:18px;font-weight:700;color:#E8541A">$'+dashFmtDec(total)+'</div></div>'
+    +'<div><div style="font-size:10px;color:#888780">% del total gastos</div><div style="font-size:18px;font-weight:700;color:#3B82F6">'+pct+'%</div></div>'
+    +'</div>';
+
+  var body = '';
+  if(!movs.length){
+    body = '<div style="text-align:center;color:#888780;padding:30px">Sin movimientos importados para esta categoría en el rango seleccionado.</div>';
+  } else {
+    body = '<div style="font-size:10px;color:#888780;font-weight:700;display:grid;grid-template-columns:90px 1fr 110px;gap:6px;padding:5px 0;border-bottom:1px solid #E8E6DF">'
+      +'<span>Fecha</span><span>Descripción</span><span style="text-align:right">Importe</span></div>';
+    movs.forEach(function(t){
+      body += '<div class="sb-row">'
+        +'<span class="sb-fecha">'+fmtFecha(t)+'</span>'
+        +'<span class="sb-desc" title="'+(t.desc||'')+'">'+esc(t.desc||'')+'</span>'
+        +'<span class="sb-imp gas">$'+dashFmtDec(t.importe)+'</span>'
+        +'</div>';
+    });
+    body += '<div class="sb-total"><span>Total ('+movs.length+' movs)</span><span style="color:#E8541A">$'+dashFmtDec(total)+'</span></div>';
+  }
+  sbOpen('📂 '+cat, 'Categoría • '+movs.length+' movimientos', summary, body);
+}
+
+// ─── Drill: Quincena (desde barras) ─────────────────────────────────────────
+function drillQuincena(quin, d, tipo){
+  var label = MESES_DASH[quin];
+  var anio  = parseInt(document.getElementById('dash-anio').value)||S.anio;
+  var movs  = S.txs.filter(function(t){
+    if(anioDeAmex(t.fecha) !== anio) return false;
+    if(quinDeAmex(t.fecha) !== quin) return false;
+    if(tipo === 'Ingresos') return t.tipo === 'Ingreso';
+    if(tipo === 'Gastos')   return t.tipo === 'Egreso';
+    return true;
+  });
+  movs.sort(function(a,b){ return a.desc.localeCompare(b.desc); });
+
+  // Also sum planeador filas for this quincena
+  var sumPlan = 0;
+  S.filas.forEach(function(f){
+    var v = f.montos[quin]||0;
+    if(!v) return;
+    if(tipo==='Ingresos' && f.tipo==='ingreso') sumPlan += v;
+    if(tipo==='Gastos'   && f.tipo==='gasto')   sumPlan += v;
+  });
+
+  var totalMovs = movs.reduce(function(s,t){return s+(parseFloat(t.importe)||0);}, 0);
+  var totalAll  = totalMovs + sumPlan;
+
+  var summary = '<div style="display:flex;gap:20px;flex-wrap:wrap">'
+    +'<div><div style="font-size:10px;color:#888780">Movimientos Amex</div><div style="font-size:18px;font-weight:700;color:#2C2C2A">'+movs.length+'</div></div>'
+    +'<div><div style="font-size:10px;color:#888780">Total Amex</div><div style="font-size:18px;font-weight:700;color:#E8541A">$'+dashFmtDec(totalMovs)+'</div></div>'
+    +(sumPlan>0?'<div><div style="font-size:10px;color:#888780">Planeador</div><div style="font-size:18px;font-weight:700;color:#3B82F6">$'+dashFmtDec(sumPlan)+'</div></div>':'')
+    +'</div>';
+
+  var body = '';
+  if(!movs.length && !sumPlan){
+    body = '<div style="text-align:center;color:#888780;padding:30px">Sin datos para esta quincena.</div>';
+  } else {
+    if(sumPlan > 0){
+      body += '<div style="background:#EEF2FF;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:11px">'
+        +'<strong>Planeador:</strong> $'+dashFmtDec(sumPlan)+'</div>';
+    }
+    if(movs.length){
+      body += '<div style="font-size:10px;color:#888780;font-weight:700;display:grid;grid-template-columns:90px 1fr 110px;gap:6px;padding:5px 0;border-bottom:1px solid #E8E6DF">'
+        +'<span>Fecha</span><span>Descripción</span><span style="text-align:right">Importe</span></div>';
+      movs.forEach(function(t){
+        var isIng = t.tipo==='Ingreso';
+        body += '<div class="sb-row">'
+          +'<span class="sb-fecha">'+fmtFecha(t)+'</span>'
+          +'<span class="sb-desc" title="'+(t.desc||'')+'">'+esc(t.desc||'')+'</span>'
+          +'<span class="sb-imp '+(isIng?'ing':'gas')+'">$'+dashFmtDec(t.importe)+'</span>'
+          +'</div>';
+      });
+      body += '<div class="sb-total"><span>Total Amex</span><span>$'+dashFmtDec(totalMovs)+'</span></div>';
+    }
+  }
+  sbOpen((tipo==='Ingresos'?'📈':'📉')+' '+label+' — '+tipo, label+' '+anio, summary, body);
+}
+
+// ─── Drill: Plan de pago (desde tabla planes) ────────────────────────────────
+function drillPlan(pk, d){
+  var plan = d.planes[pk];
+  if(!plan) return;
+  plan.pagos.sort(function(a,b){ return a.cargo - b.cargo; });
+  var maxCargo  = plan.pagos[plan.pagos.length-1].cargo;
+  var pct       = Math.round(maxCargo/plan.total*100);
+  var totalEst  = plan.importeUn * plan.total;
+  var pagadoAll = plan.importeUn * maxCargo;
+  var pendiente = totalEst - pagadoAll;
+
+  var summary = '<div>'
+    +'<div class="sb-progress"><div class="sb-progress-bar" style="width:'+Math.min(pct,100)+'%;background:'+(pct>=100?'#1D9E75':'#3B82F6')+'"></div></div>'
+    +'<div style="display:flex;justify-content:space-between;font-size:10px;color:#888780;margin-bottom:8px">'
+    +'<span>Cargo '+maxCargo+' de '+plan.total+'</span><span>'+pct+'% completado</span></div>'
+    +'<div style="display:flex;gap:16px;flex-wrap:wrap">'
+    +'<div><div style="font-size:10px;color:#888780">Por cargo</div><div style="font-size:16px;font-weight:700">$'+dashFmtDec(plan.importeUn)+'</div></div>'
+    +'<div><div style="font-size:10px;color:#888780">Total estimado</div><div style="font-size:16px;font-weight:700">$'+dashFmtDec(totalEst)+'</div></div>'
+    +'<div><div style="font-size:10px;color:#888780">Pagado</div><div style="font-size:16px;font-weight:700;color:#1D9E75">$'+dashFmtDec(pagadoAll)+'</div></div>'
+    +'<div><div style="font-size:10px;color:#888780">Pendiente</div><div style="font-size:16px;font-weight:700;color:#E8541A">$'+dashFmtDec(pendiente)+'</div></div>'
+    +'</div></div>';
+
+  // All cargos including future (estimados)
+  var body = '<div class="sb-plan-header"><span>Cargo</span><span>Fecha</span><span style="text-align:right">Importe</span><span style="text-align:center">Estado</span></div>';
+  for(var i=1; i<=plan.total; i++){
+    var pago = null;
+    plan.pagos.forEach(function(p){ if(p.cargo===i) pago=p; });
+    var estadoHtml, impHtml;
+    if(pago){
+      estadoHtml = '<span style="color:#1D9E75;font-weight:700;text-align:center">✓ Pagado</span>';
+      impHtml    = '<span style="text-align:right;font-weight:600;color:#E8541A">$'+dashFmtDec(pago.importe)+'</span>';
+    } else if(i <= maxCargo){
+      estadoHtml = '<span style="color:#F59E0B;text-align:center">⚠ Sin dato</span>';
+      impHtml    = '<span style="text-align:right;color:#888780">—</span>';
+    } else {
+      estadoHtml = '<span style="color:#B4B2A9;text-align:center">⏳ Pendiente</span>';
+      impHtml    = '<span style="text-align:right;color:#888780">~$'+dashFmtDec(plan.importeUn)+'</span>';
+    }
+    body += '<div class="sb-plan-row" style="'+(pago?'':'background:#FAFAF8')+'">'
+      +'<span style="font-weight:600">'+i+' / '+plan.total+'</span>'
+      +(pago?'<span style="font-size:10px;color:#888780">'+fmtFecha(pago)+'</span>':'<span style="color:#B4B2A9;font-size:10px">—</span>')
+      +impHtml
+      +estadoHtml
+      +'</div>';
+  }
+
+  sbOpen('💳 '+plan.base, plan.total+' cargos • '+pct+'% completado', summary, body);
+}
+
+// Shortcut helper: fmtFecha for txs object (has .fecha string)
+function fmtFecha(t){
+  if(!t || !t.fecha) return '—';
+  var d = t.fecha;
+  var MMAP = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  var MC   = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  var p = d.split(' ');
+  if(p.length===3 && MMAP[p[1]]!==undefined) return p[0]+'/'+MC[MMAP[p[1]]]+'/'+p[2].slice(2);
+  var pts = d.split('-');
+  if(pts.length===3) return parseInt(pts[2])+'/'+MC[parseInt(pts[1])-1]+'/'+pts[0].slice(2);
+  return d;
+}
+
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 var dashCharts = {};
 
@@ -1269,13 +1532,20 @@ function renderBarras(d){
       ]
     },
     options:{responsive:true,
+    onClick:function(evt,els){
+      if(!els||!els.length) return;
+      var idx = els[0].index;
+      var tipo = els[0].datasetIndex===0 ? 'Ingresos' : 'Gastos';
+      var q = d.qIni + idx;
+      drillQuincena(q, sbLastData||d, tipo);
+    },
       plugins:{
         legend:{position:'top',labels:{font:{size:11},boxWidth:12}},
         tooltip:{callbacks:{
           label:function(c){
             var total = c.dataset.data.reduce(function(a,b){return a+(b||0);},0);
             var pct = total>0 ? Math.round(c.parsed.y/total*100) : 0;
-            return c.dataset.label+': $'+dashFmtDec(c.parsed.y)+' ('+pct+'%)';
+            return c.dataset.label+': $'+dashFmtDec(c.parsed.y)+' ('+pct+'%) — clic para desglose';
           }
         }}
       },
@@ -1328,21 +1598,29 @@ function renderDona(d){
   dashCharts['dona'] = new Chart(ctx, {
     type:'doughnut',
     data:{labels:labels,datasets:[{data:datos,backgroundColor:COLORES_BARRAS,borderWidth:2,borderColor:'#fff'}]},
-    options:{responsive:true,plugins:{
+    options:{responsive:true,
+    onClick:function(evt,els){
+      if(!els||!els.length) return;
+      var cat = labels[els[0].index];
+      if(cat && cat!=='Otros') drillCategoria(cat, sbLastData||{qIni:mesVer.ini,qFin:mesVer.fin,porConcepto:d.porConcepto,planes:d.planes||{}});
+    },
+    plugins:{
       legend:{position:'right',labels:{font:{size:10},boxWidth:12,padding:8,
         generateLabels:function(chart){
           var ds = chart.data.datasets[0];
           return chart.data.labels.map(function(lbl,i){
             var val = ds.data[i]||0;
             var pct = total>0?Math.round(val/total*100):0;
-            return {text:lbl+' '+pct+'%',fillStyle:ds.backgroundColor[i],hidden:false,index:i};
+            return {text:lbl+' '+pct+'%',fillStyle:ds.backgroundColor[i],hidden:false,index:i,
+              onClick:function(){ if(lbl!=='Otros') drillCategoria(lbl, sbLastData||{qIni:mesVer.ini,qFin:mesVer.fin,porConcepto:d.porConcepto,planes:{}}); }
+            };
           });
         }
       }},
       tooltip:{callbacks:{
         label:function(c){
           var pct = total>0?Math.round(c.parsed/total*100):0;
-          return c.label+': $'+dashFmtDec(c.parsed)+' ('+pct+'%)';
+          return c.label+': $'+dashFmtDec(c.parsed)+' ('+pct+'%) — clic para desglose';
         }
       }}
     }}
@@ -1362,8 +1640,14 @@ function renderTop(d){
       labels: top10.map(function(p){return p[0].length>20?p[0].slice(0,20)+'…':p[0];}),
       datasets:[{data:top10.map(function(p){return p[1];}),backgroundColor:'rgba(99,102,241,.75)',borderRadius:4}]
     },
-    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},
-      tooltip:{callbacks:{label:function(c){return '$'+dashFmtDec(c.parsed.x);}}}},
+    options:{indexAxis:'y',responsive:true,
+    onClick:function(evt,els){
+      if(!els||!els.length) return;
+      var cat = top10[top10.length-1-els[0].index][0];
+      if(cat) drillCategoria(cat, sbLastData||{qIni:mesVer.ini,qFin:mesVer.fin,porConcepto:{},planes:{}});
+    },
+    plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:function(c){return '$'+dashFmtDec(c.parsed.x)+' — clic para desglose';}}}},
       scales:{x:{ticks:{callback:function(v){return '$'+dashFmt(v)},font:{size:10}},grid:{color:'#F0EEE8'}},
               y:{ticks:{font:{size:10}},grid:{display:false}}}}
   });
@@ -1402,9 +1686,10 @@ function renderPlanes(d){
     // Progress bar
     var bar = '<div style="background:#E8E6DF;border-radius:3px;height:8px;margin-top:3px">'
       +'<div style="background:'+(pct>=100?'#1D9E75':'#3B82F6')+';width:'+Math.min(pct,100)+'%;height:8px;border-radius:3px"></div></div>';
-    html += '<tr>'
+    var pkSafe = pk.replace(/'/g,"\'");
+    html += '<tr style="cursor:pointer" onclick="drillPlan(''+pkSafe+'', sbLastData)" title="Ver historial completo">'
       +'<td style="padding:6px 10px;border:1px solid #E8E6DF;max-width:200px">'
-        +'<div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+p.base+'">'+p.base+'</div>'
+        +'<div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#2C2C2A" title="'+p.base+'">'+p.base+' <span style="font-size:10px;color:#3B82F6">→</span></div>'
         +'<div style="color:#888780;font-size:10px">Cargo '+maxCargo+' de '+p.total+bar+'</div>'
       +'</td>'
       +'<td style="padding:6px 10px;border:1px solid #E8E6DF;text-align:center">'
@@ -1488,6 +1773,7 @@ function renderDash(){
 
 function renderDashInterno(){
   var d = dashDatos();
+  sbLastData = d;  // Save for drill-down access
   // Show current range filter
   var lbl = document.getElementById('dash-rango-lbl');
   if(lbl){
