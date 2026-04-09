@@ -33,9 +33,9 @@ nav h1{font-size:13px;font-weight:700;color:#fff;flex:1;min-width:120px}
 /* TABLA PLANEADOR */
 .tscroll{overflow-x:auto;border-radius:8px;border:1px solid #D3D1C7;background:#fff}
 table.plan{border-collapse:collapse;table-layout:fixed;width:100%;min-width:1800px}
-table.plan col.cm{width:130px}
+table.plan col.cm{width:120px}
 table.plan col.cf{width:90px}
-table.plan col.cc{width:190px}
+table.plan col.cc{width:230px}
 table.plan col.cx{width:72px}
 table.plan col.co{width:105px}
 table.plan col.ca{width:28px}
@@ -71,7 +71,7 @@ input.ni:focus{outline:2px solid #1D9E75;border-radius:2px;background:#E1F5EE;co
 input.ni.ing-val{color:#085041;font-weight:500}
 input.ni.gas-val{color:#993C1D;font-weight:500}
 input.ni.nar{color:#fff;font-weight:700}
-input.nt{width:100%;border:none;background:transparent;font-family:Arial;font-size:11px;color:#2C2C2A;padding:0;min-width:0}
+input.nt{width:100%;border:none;background:transparent;font-family:Arial;font-size:11px;color:#2C2C2A;padding:0;min-width:0;overflow:hidden;text-overflow:ellipsis}
 input.nt:focus{outline:2px solid #378ADD;border-radius:2px;background:#E6F1FB}
 select.ns{width:100%;border:none;background:transparent;font-family:Arial;font-size:10px;color:inherit;padding:0;cursor:pointer}
 button.del{background:none;border:none;cursor:pointer;color:#B4B2A9;font-size:13px;padding:2px 4px;border-radius:3px}
@@ -328,7 +328,8 @@ button.del2:hover{background:#FAECE7;color:#D85A30}
     <table class="dtbl">
       <thead><tr>
         <th style="width:90px">Fecha</th><th>Descripción</th>
-        <th style="width:170px">Categoría</th><th style="width:76px">Tipo</th>
+        <th style="width:190px">Referencia / RFC</th>
+        <th style="width:160px">Categoría</th><th style="width:76px">Tipo</th>
         <th style="width:66px">Origen</th><th style="width:110px;text-align:right">Importe</th>
         <th style="width:28px"></th>
       </tr></thead>
@@ -942,15 +943,18 @@ function loadFile(file){
         var r=rows[i];
         if(!r[0]||!r[0].toString().trim()) continue;
         var fecha = r[0].toString().trim();
-        var desc  = (r[2]||'').toString().trim().substring(0,70);
+        var descCorto = (r[2]||'').toString().trim();
+        var descLargo = (r[9]||r[2]||'').toString().trim(); // col J = concepto completo
+        var ref   = (r[8]||'').toString().trim();           // col I = RFC/referencia
+        var desc  = descLargo || descCorto;
         var impOrig = parseFloat(r[5])||0;
         var importe = Math.abs(impOrig);
         if(importe===0) continue;
         var tipo = impOrig<0?'Ingreso':'Egreso';
         var cat  = clasificar(desc,impOrig);
-        var key  = fecha+'|'+desc.substring(0,30)+'|'+importe.toFixed(2);
+        var key  = fecha+'|'+descCorto.substring(0,30)+'|'+importe.toFixed(2);
         if(existe[key]){ dups++; continue; }
-        pending.push({id:uid(),fecha:fecha,desc:desc,tipo:tipo,cat:cat,importe:importe,origen:'amex',periodo:per,checked:true});
+        pending.push({id:uid(),fecha:fecha,desc:desc,ref:ref,tipo:tipo,cat:cat,importe:importe,origen:'amex',periodo:per,checked:true});
       }
       prog.textContent = pending.length+' movimientos nuevos — '+dups+' duplicados omitidos.';
       if(pending.length) renderPreview();
@@ -1001,13 +1005,13 @@ document.getElementById('btn-importar').addEventListener('click', function(){
     if(anio === S.anio){
       var montos = Array(24).fill(null);
       montos[quin] = t.importe;
-      S.filas.push({id:uid(),tipo:t.tipo==='Egreso'?'gasto':'ingreso',metodo:'AMEX PLATINUM',concepto:t.desc.substring(0,55),obs:t.cat,montos:montos,inicio:quin,fecha:t.fecha});
+      S.filas.push({id:uid(),tipo:t.tipo==='Egreso'?'gasto':'ingreso',metodo:'AMEX PLATINUM',concepto:t.desc,obs:t.cat,montos:montos,inicio:quin,fecha:t.fecha,ref:t.ref||''});
       enPlaneador++;
     } else {
       soloDetalle++;
     }
     // Siempre guardar en Detalle movimientos
-    S.txs.push({id:uid(),fecha:t.fecha,desc:t.desc,tipo:t.tipo,cat:t.cat,importe:t.importe,origen:t.origen,periodo:t.periodo});
+    S.txs.push({id:uid(),fecha:t.fecha,desc:t.desc,ref:t.ref||'',tipo:t.tipo,cat:t.cat,importe:t.importe,origen:t.origen,periodo:t.periodo});
   });
   pending = pending.filter(function(t){ return !t.checked; });
   guardar(); render();
@@ -1080,6 +1084,7 @@ function renderDetalle(){
     return '<tr>'
       +'<td style="font-size:10px;color:#888780;min-width:80px">'+t.fecha+'</td>'
       +'<td title="'+esc(t.desc)+'">'+esc(t.desc)+'</td>'
+      +'<td style="font-size:9px;color:#5F5E5A;word-break:break-all" title="'+esc(t.ref||'')+'">'+esc(t.ref||'—')+'</td>'
       +'<td style="font-size:10px;color:#5F5E5A">'+t.cat+'</td>'
       +'<td><span class="badge b'+(t.tipo==='Egreso'?'e':'i')+'">'+t.tipo+'</span></td>'
       +'<td><span class="badge bm">'+(t.origen||'')+'</span></td>'
