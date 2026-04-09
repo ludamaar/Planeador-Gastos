@@ -32,11 +32,11 @@ nav h1{font-size:13px;font-weight:700;color:#fff;flex:1;min-width:120px}
 
 /* TABLA PLANEADOR */
 .tscroll{overflow-x:auto;border-radius:8px;border:1px solid #D3D1C7;background:#fff}
-table.plan{border-collapse:collapse;table-layout:fixed;width:100%;min-width:1100px}
+table.plan{border-collapse:collapse;table-layout:fixed;width:100%;min-width:1800px}
 table.plan col.cm{width:130px}
 table.plan col.cf{width:90px}
 table.plan col.cc{width:190px}
-table.plan col.cx{width:98px}
+table.plan col.cx{width:72px}
 table.plan col.co{width:105px}
 table.plan col.ca{width:28px}
 table.plan thead tr.h0 th{background:#2C2C2A;color:#fff;font-size:12px;font-weight:700;padding:6px 4px;border:1px solid #3a3a38;text-align:center}
@@ -168,17 +168,33 @@ button.del2:hover{background:#FAECE7;color:#D85A30}
   <div style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.08);border-radius:5px;padding:3px 8px">
     <span style="font-size:10px;color:#888780;white-space:nowrap">Ver meses:</span>
     <select id="mes-inicio" style="background:#2C2C2A;color:#FAC775;border:1px solid rgba(255,200,0,.3);border-radius:4px;font-size:11px;padding:3px 5px;font-family:Arial;cursor:pointer">
-      <option value="0">Ene</option><option value="1">Feb</option><option value="2">Mar</option>
-      <option value="3">Abr</option><option value="4">May</option><option value="5">Jun</option>
-      <option value="6">Jul</option><option value="7">Ago</option><option value="8">Sep</option>
-      <option value="9">Oct</option><option value="10">Nov</option><option value="11">Dic</option>
+      <option value="0">Ene 1ª</option><option value="1">Ene 2ª</option>
+<option value="2">Feb 1ª</option><option value="3">Feb 2ª</option>
+<option value="4">Mar 1ª</option><option value="5">Mar 2ª</option>
+<option value="6">Abr 1ª</option><option value="7">Abr 2ª</option>
+<option value="8">May 1ª</option><option value="9">May 2ª</option>
+<option value="10">Jun 1ª</option><option value="11">Jun 2ª</option>
+<option value="12">Jul 1ª</option><option value="13">Jul 2ª</option>
+<option value="14">Ago 1ª</option><option value="15">Ago 2ª</option>
+<option value="16">Sep 1ª</option><option value="17">Sep 2ª</option>
+<option value="18">Oct 1ª</option><option value="19">Oct 2ª</option>
+<option value="20">Nov 1ª</option><option value="21">Nov 2ª</option>
+<option value="22">Dic 1ª</option><option value="23">Dic 2ª</option>
     </select>
     <span style="font-size:10px;color:#888780">→</span>
     <select id="mes-fin" style="background:#2C2C2A;color:#FAC775;border:1px solid rgba(255,200,0,.3);border-radius:4px;font-size:11px;padding:3px 5px;font-family:Arial;cursor:pointer">
-      <option value="0">Ene</option><option value="1">Feb</option><option value="2">Mar</option>
-      <option value="3">Abr</option><option value="4">May</option><option value="5">Jun</option>
-      <option value="6">Jul</option><option value="7">Ago</option><option value="8">Sep</option>
-      <option value="9">Oct</option><option value="10">Nov</option><option value="11" selected>Dic</option>
+      <option value="0">Ene 1ª</option><option value="1">Ene 2ª</option>
+<option value="2">Feb 1ª</option><option value="3">Feb 2ª</option>
+<option value="4">Mar 1ª</option><option value="5">Mar 2ª</option>
+<option value="6">Abr 1ª</option><option value="7">Abr 2ª</option>
+<option value="8">May 1ª</option><option value="9">May 2ª</option>
+<option value="10">Jun 1ª</option><option value="11">Jun 2ª</option>
+<option value="12">Jul 1ª</option><option value="13">Jul 2ª</option>
+<option value="14">Ago 1ª</option><option value="15">Ago 2ª</option>
+<option value="16">Sep 1ª</option><option value="17">Sep 2ª</option>
+<option value="18">Oct 1ª</option><option value="19">Oct 2ª</option>
+<option value="20">Nov 1ª</option><option value="21">Nov 2ª</option>
+<option value="22">Dic 1ª</option><option value="23" selected>Dic 2ª</option>
     </select>
     <button id="btn-mes-hoy" type="button" style="background:rgba(255,200,0,.15);border:1px solid rgba(255,200,0,.3);color:#FAC775;border-radius:4px;font-size:10px;padding:3px 7px;cursor:pointer;font-family:Arial">Hoy</button>
     <button id="btn-mes-trim" type="button" style="background:rgba(255,200,0,.15);border:1px solid rgba(255,200,0,.3);color:#FAC775;border-radius:4px;font-size:10px;padding:3px 7px;cursor:pointer;font-family:Arial">Trimestre</button>
@@ -201,22 +217,23 @@ button.del2:hover{background:#FAECE7;color:#D85A30}
     <table class="plan">
       <colgroup>
         <col class="cm"><col class="cf"><col class="cc">
-        <col class="cx"><col class="cx"><col class="cx"><col class="cx">
-        <col class="cx"><col class="cx"><col class="cx"><col class="cx">
-        <col class="cx"><col class="cx"><col class="cx"><col class="cx">
+        <col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx"><col class="cx">
         <col class="co"><col class="ca">
       </colgroup>
-      <thead>
+            <thead>
         <tr class="h0">
           <th colspan="3"></th>
-          <th colspan="12" id="th-anio">2026</th>
+          <th colspan="24" id="th-anio">2026</th>
           <th colspan="2"></th>
+        </tr>
+        <tr class="h1" id="tr-meses">
+          <th class="hf" colspan="3"></th>
+          <th colspan="2" class="hm" id="th-mes-0">Ene</th><th colspan="2" class="hm" id="th-mes-1" style="border-left:2px solid #c8a835">Feb</th><th colspan="2" class="hm" id="th-mes-2" style="border-left:2px solid #c8a835">Mar</th><th colspan="2" class="hm" id="th-mes-3" style="border-left:2px solid #c8a835">Abr</th><th colspan="2" class="hm" id="th-mes-4" style="border-left:2px solid #c8a835">May</th><th colspan="2" class="hm" id="th-mes-5" style="border-left:2px solid #c8a835">Jun</th><th colspan="2" class="hm" id="th-mes-6" style="border-left:2px solid #c8a835">Jul</th><th colspan="2" class="hm" id="th-mes-7" style="border-left:2px solid #c8a835">Ago</th><th colspan="2" class="hm" id="th-mes-8" style="border-left:2px solid #c8a835">Sep</th><th colspan="2" class="hm" id="th-mes-9" style="border-left:2px solid #c8a835">Oct</th><th colspan="2" class="hm" id="th-mes-10" style="border-left:2px solid #c8a835">Nov</th><th colspan="2" class="hm" id="th-mes-11" style="border-left:2px solid #c8a835">Dic</th>
+          <th class="hf" colspan="2"></th>
         </tr>
         <tr class="h1">
           <th class="hf">Método de Pago</th><th class="hf">Fecha</th><th class="hf">Concepto</th>
-          <th class="hm" id="th-m0">Ene</th><th class="hm" id="th-m1">Feb</th><th class="hm" id="th-m2">Mar</th><th class="hm" id="th-m3">Abr</th>
-          <th class="hm" id="th-m4">May</th><th class="hm" id="th-m5">Jun</th><th class="hm" id="th-m6">Jul</th><th class="hm" id="th-m7">Ago</th>
-          <th class="hm" id="th-m8">Sep</th><th class="hm" id="th-m9">Oct</th><th class="hm" id="th-m10">Nov</th><th class="hm" id="th-m11">Dic</th>
+          <th class="hm" id="th-m0" style="font-size:9px;">1ª</th><th class="hm" id="th-m1" style="font-size:9px">2ª</th><th class="hm" id="th-m2" style="font-size:9px;border-left:2px solid #c8a835;">1ª</th><th class="hm" id="th-m3" style="font-size:9px">2ª</th><th class="hm" id="th-m4" style="font-size:9px;border-left:2px solid #c8a835;">1ª</th><th class="hm" id="th-m5" style="font-size:9px">2ª</th><th class="hm" id="th-m6" style="font-size:9px;border-left:2px solid #c8a835;">1ª</th><th class="hm" id="th-m7" style="font-size:9px">2ª</th><th class="hm" id="th-m8" style="font-size:9px;border-left:2px solid #c8a835;">1ª</th><th class="hm" id="th-m9" style="font-size:9px">2ª</th><th class="hm" id="th-m10" style="font-size:9px;border-left:2px solid #c8a835;">1ª</th><th class="hm" id="th-m11" style="font-size:9px">2ª</th><th class="hm" id="th-m12" style="font-size:9px;border-left:2px solid #c8a835;">1ª</th><th class="hm" id="th-m13" style="font-size:9px">2ª</th><th class="hm" id="th-m14" style="font-size:9px;border-left:2px solid #c8a835;">1ª</th><th class="hm" id="th-m15" style="font-size:9px">2ª</th><th class="hm" id="th-m16" style="font-size:9px;border-left:2px solid #c8a835;">1ª</th><th class="hm" id="th-m17" style="font-size:9px">2ª</th><th class="hm" id="th-m18" style="font-size:9px;border-left:2px solid #c8a835;">1ª</th><th class="hm" id="th-m19" style="font-size:9px">2ª</th><th class="hm" id="th-m20" style="font-size:9px;border-left:2px solid #c8a835;">1ª</th><th class="hm" id="th-m21" style="font-size:9px">2ª</th><th class="hm" id="th-m22" style="font-size:9px;border-left:2px solid #c8a835;">1ª</th><th class="hm" id="th-m23" style="font-size:9px">2ª</th>
           <th class="hf">Obs.</th><th class="hf"></th>
         </tr>
       </thead>
@@ -382,19 +399,35 @@ button.del2:hover{background:#FAECE7;color:#D85A30}
     <label>Concepto</label><input id="r-con" type="text" placeholder="Nombre...">
     <label>Observaciones</label>
     <select id="r-obs"><option value="">—</option><option>Recurrente</option><option>Variable</option><option>Eventual</option></select>
-    <label>Mes inicio</label>
+    <label>Quincena inicio</label>
     <select id="r-ini">
-      <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
-      <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
-      <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
-      <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+      <option value="0">Enero 1ª (1-15)</option><option value="1">Enero 2ª (16-fin)</option>
+      <option value="2">Febrero 1ª (1-15)</option><option value="3">Febrero 2ª (16-fin)</option>
+      <option value="4">Marzo 1ª (1-15)</option><option value="5">Marzo 2ª (16-fin)</option>
+      <option value="6">Abril 1ª (1-15)</option><option value="7">Abril 2ª (16-fin)</option>
+      <option value="8">Mayo 1ª (1-15)</option><option value="9">Mayo 2ª (16-fin)</option>
+      <option value="10">Junio 1ª (1-15)</option><option value="11">Junio 2ª (16-fin)</option>
+      <option value="12">Julio 1ª (1-15)</option><option value="13">Julio 2ª (16-fin)</option>
+      <option value="14">Agosto 1ª (1-15)</option><option value="15">Agosto 2ª (16-fin)</option>
+      <option value="16">Septiembre 1ª (1-15)</option><option value="17">Septiembre 2ª (16-fin)</option>
+      <option value="18">Octubre 1ª (1-15)</option><option value="19">Octubre 2ª (16-fin)</option>
+      <option value="20">Noviembre 1ª (1-15)</option><option value="21">Noviembre 2ª (16-fin)</option>
+      <option value="22">Diciembre 1ª (1-15)</option><option value="23">Diciembre 2ª (16-fin)</option>
     </select>
-    <label>Mes fin</label>
+    <label>Quincena fin</label>
     <select id="r-fin">
-      <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
-      <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
-      <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
-      <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11" selected>Diciembre</option>
+      <option value="0">Enero 1ª (1-15)</option><option value="1">Enero 2ª (16-fin)</option>
+      <option value="2">Febrero 1ª (1-15)</option><option value="3">Febrero 2ª (16-fin)</option>
+      <option value="4">Marzo 1ª (1-15)</option><option value="5">Marzo 2ª (16-fin)</option>
+      <option value="6">Abril 1ª (1-15)</option><option value="7">Abril 2ª (16-fin)</option>
+      <option value="8">Mayo 1ª (1-15)</option><option value="9">Mayo 2ª (16-fin)</option>
+      <option value="10">Junio 1ª (1-15)</option><option value="11">Junio 2ª (16-fin)</option>
+      <option value="12">Julio 1ª (1-15)</option><option value="13">Julio 2ª (16-fin)</option>
+      <option value="14">Agosto 1ª (1-15)</option><option value="15">Agosto 2ª (16-fin)</option>
+      <option value="16">Septiembre 1ª (1-15)</option><option value="17">Septiembre 2ª (16-fin)</option>
+      <option value="18">Octubre 1ª (1-15)</option><option value="19">Octubre 2ª (16-fin)</option>
+      <option value="20">Noviembre 1ª (1-15)</option><option value="21">Noviembre 2ª (16-fin)</option>
+      <option value="22">Diciembre 1ª (1-15)</option><option value="23" selected>Diciembre 2ª (16-fin)</option>
     </select>
     <label>Monto mensual (MXN)</label>
     <input id="r-val" type="number" placeholder="0.00" min="0" step="0.01">
@@ -450,28 +483,28 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const METS  = ['AMEX PLATINUM','Efectivo','Transferencia','Débito','Otro'];
 const CATS  = ['Restaurantes / Comida','Despensa / Supermercado','Transporte / Gasolina','Servicios (luz, agua, gas, tel)','Suscripciones / Streaming','Educación / Cursos','Salud / Médico','Deporte / Gym','Seguros','Compras en línea','Viajes / Vuelos','Ropa / Moda','Deuda / Comisiones Tarjeta','Pagos / Abonos','Otro egreso'];
-const KEY   = 'planeador_v2';
+const KEY   = 'planeador_v3';
 // Limpiar claves viejas que puedan estar corruptas
-try{ ['planeador_v1','pgv7','pgv6','pgv5','pgv4','pgv3','gp_v4','gp_v3','plan2026'].forEach(function(k){ localStorage.removeItem(k); }); }catch(e){}
+try{ ['planeador_v1','planeador_v2','pgv7','pgv6','pgv5','pgv4','pgv3','gp_v4','gp_v3','plan2026'].forEach(function(k){ localStorage.removeItem(k); }); }catch(e){}
 
 // ─── ESTADO ───────────────────────────────────────────────────────────────────
 function uid(){ return Date.now() + Math.floor(Math.random()*9999); }
 
 function estadoInicial(){
   return { anio:2026, txs:[], filas:[
-    {id:uid(),tipo:'ingreso',metodo:'Efectivo',concepto:'Sueldo',obs:'Recurrente',montos:[235000,285000,285000,200000,200000,200000,200000,200000,200000,200000,200000,200000],inicio:0},
-    {id:uid(),tipo:'gasto',metodo:'AMEX PLATINUM',concepto:'Pagos Diferidos',obs:'',montos:[5976.85,10957.56,null,10957.56,10957.56,10957.56,10957.56,null,null,null,null,null],inicio:0},
-    {id:uid(),tipo:'gasto',metodo:'AMEX PLATINUM',concepto:'Palacio de Hierro',obs:'Recurrente',montos:[null,2600,null,10000,10000,10000,10000,10000,10000,10000,10000,10000],inicio:1},
-    {id:uid(),tipo:'gasto',metodo:'Efectivo',concepto:'Préstamo N U',obs:'Recurrente',montos:[5292,5292,null,5292,5292,5292,5292,null,null,null,null,null],inicio:0},
-    {id:uid(),tipo:'gasto',metodo:'Efectivo',concepto:'Renta Grenoble',obs:'Recurrente',montos:[1500,1500,1500,1500,1500,1500,1500,1500,1500,1500,1500,1500],inicio:0},
-    {id:uid(),tipo:'gasto',metodo:'Efectivo',concepto:'Renta Lencho',obs:'Recurrente',montos:[5000,5000,5000,5000,5000,5000,5000,5000,5000,5000,5000,5000],inicio:0},
-    {id:uid(),tipo:'gasto',metodo:'Efectivo',concepto:'Seguros de Auto',obs:'Recurrente',montos:[null,2400,null,2400,2400,2400,2400,2400,2400,2400,2400,2400],inicio:1},
-    {id:uid(),tipo:'gasto',metodo:'AMEX PLATINUM',concepto:'SGMNYL Cecy Afore',obs:'Recurrente',montos:Array(12).fill(5139.65),inicio:0},
-    {id:uid(),tipo:'gasto',metodo:'AMEX PLATINUM',concepto:'Spotify',obs:'Recurrente',montos:Array(12).fill(239),inicio:0},
-    {id:uid(),tipo:'gasto',metodo:'AMEX PLATINUM',concepto:'Súper',obs:'Recurrente',montos:Array(12).fill(20000),inicio:0},
-    {id:uid(),tipo:'gasto',metodo:'Efectivo',concepto:'TC N U',obs:'',montos:Array(12).fill(null),inicio:null},
-    {id:uid(),tipo:'gasto',metodo:'Efectivo',concepto:'TC N U Diferido Cada 23',obs:'Recurrente',montos:[2384,2384,null,2384,2384,2384,2384,null,null,null,null,null],inicio:0},
-    {id:uid(),tipo:'gasto',metodo:'AMEX PLATINUM',concepto:'Telcel 1MPS',obs:'Recurrente',montos:Array(12).fill(600.20),inicio:0},
+    {id:uid(),tipo:'ingreso',metodo:'Efectivo',concepto:'Sueldo',obs:'Recurrente',montos:[235000,null,285000,null,285000,null,200000,null,200000,null,200000,null,200000,null,200000,null,200000,null,200000,null,200000,null,200000,null],inicio:0},
+    {id:uid(),tipo:'gasto',metodo:'AMEX PLATINUM',concepto:'Pagos Diferidos',obs:'',montos:[5976.85,null,10957.56,null,null,null,10957.56,null,10957.56,null,10957.56,null,10957.56,null,null,null,null,null,null,null,null,null,null,null],inicio:0},
+    {id:uid(),tipo:'gasto',metodo:'AMEX PLATINUM',concepto:'Palacio de Hierro',obs:'Recurrente',montos:[null,null,2600,null,null,null,10000,null,10000,null,10000,null,10000,null,10000,null,10000,null,10000,null,10000,null,10000,null],inicio:1},
+    {id:uid(),tipo:'gasto',metodo:'Efectivo',concepto:'Préstamo N U',obs:'Recurrente',montos:[5292,null,5292,null,null,null,5292,null,5292,null,5292,null,5292,null,null,null,null,null,null,null,null,null,null,null],inicio:0},
+    {id:uid(),tipo:'gasto',metodo:'Efectivo',concepto:'Renta Grenoble',obs:'Recurrente',montos:[1500,null,1500,null,1500,null,1500,null,1500,null,1500,null,1500,null,1500,null,1500,null,1500,null,1500,null,1500,null],inicio:0},
+    {id:uid(),tipo:'gasto',metodo:'Efectivo',concepto:'Renta Lencho',obs:'Recurrente',montos:[5000,null,5000,null,5000,null,5000,null,5000,null,5000,null,5000,null,5000,null,5000,null,5000,null,5000,null,5000,null],inicio:0},
+    {id:uid(),tipo:'gasto',metodo:'Efectivo',concepto:'Seguros de Auto',obs:'Recurrente',montos:[null,null,2400,null,null,null,2400,null,2400,null,2400,null,2400,null,2400,null,2400,null,2400,null,2400,null,2400,null],inicio:1},
+    {id:uid(),tipo:'gasto',metodo:'AMEX PLATINUM',concepto:'SGMNYL Cecy Afore',obs:'Recurrente',montos:[5139.65,null,5139.65,null,5139.65,null,5139.65,null,5139.65,null,5139.65,null,5139.65,null,5139.65,null,5139.65,null,5139.65,null,5139.65,null,5139.65,null],inicio:0},
+    {id:uid(),tipo:'gasto',metodo:'AMEX PLATINUM',concepto:'Spotify',obs:'Recurrente',montos:[239,null,239,null,239,null,239,null,239,null,239,null,239,null,239,null,239,null,239,null,239,null,239,null],inicio:0},
+    {id:uid(),tipo:'gasto',metodo:'AMEX PLATINUM',concepto:'Súper',obs:'Recurrente',montos:[20000,null,20000,null,20000,null,20000,null,20000,null,20000,null,20000,null,20000,null,20000,null,20000,null,20000,null,20000,null],inicio:0},
+    {id:uid(),tipo:'gasto',metodo:'Efectivo',concepto:'TC N U',obs:'',montos:Array(24).fill(null),inicio:null},
+    {id:uid(),tipo:'gasto',metodo:'Efectivo',concepto:'TC N U Diferido Cada 23',obs:'Recurrente',montos:[2384,null,2384,null,null,null,2384,null,2384,null,2384,null,2384,null,null,null,null,null,null,null,null,null,null,null],inicio:0},
+    {id:uid(),tipo:'gasto',metodo:'AMEX PLATINUM',concepto:'Telcel 1MPS',obs:'Recurrente',montos:[600.20,null,600.20,null,600.20,null,600.20,null,600.20,null,600.20,null,600.20,null,600.20,null,600.20,null,600.20,null,600.20,null,600.20,null],inicio:0},
   ]};
 }
 
@@ -502,6 +535,11 @@ function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').repla
 function metCls(m){ return m==='AMEX PLATINUM'?'ma':m==='Efectivo'?'me':'mo'; }
 
 var MESES_CORTO = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+// Quincena helpers
+function qLabel(q){ return MESES_CORTO[Math.floor(q/2)]+' '+(q%2===0?'1ª':'2ª'); }
+function qMes(q){ return Math.floor(q/2); }
+function qNum(q){ return q%2; }
+
 function fmtFecha(f){
   if(!f.fecha) return '';
   var d = f.fecha;
@@ -520,11 +558,21 @@ function fmtFecha(f){
 }
 
 function mesDeAmex(fecha){
+  // Returns month index 0-11
   const MM={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
   const p = fecha.trim().split(' ');
   if(p.length===3 && MM[p[1]]!==undefined) return MM[p[1]];
   const m = parseInt((fecha.split('-')[1]||'1'))-1;
   return (m>=0&&m<=11)?m:0;
+}
+function quinDeAmex(fecha){
+  // Returns quincena index 0-23
+  var mes = mesDeAmex(fecha);
+  var dia = 1;
+  var p = fecha.trim().split(' ');
+  if(p.length===3) dia = parseInt(p[0])||1;
+  else { var pts=fecha.split('-'); if(pts.length===3) dia=parseInt(pts[2])||1; }
+  return mes*2 + (dia<=15?0:1);
 }
 
 function anioDeAmex(fecha){
@@ -554,7 +602,7 @@ document.getElementById('sn-det').addEventListener('click', function(){ irA('det
 document.getElementById('sn-dash').addEventListener('click', function(){ irA('dash'); });
 
 // ─── RANGO DE MESES VISIBLE ───────────────────────────────────────────────────
-var mesVer = { ini:0, fin:11 };
+var mesVer = { ini:0, fin:23 };
 
 function getMesIni(){ return mesVer.ini; }
 function getMesFin(){ return mesVer.fin; }
@@ -568,6 +616,8 @@ function aplicarRango(){
   mesVer.ini = parseInt(document.getElementById('mes-inicio').value);
   mesVer.fin = parseInt(document.getElementById('mes-fin').value);
   if(mesVer.fin < mesVer.ini) mesVer.fin = mesVer.ini;
+  if(mesVer.fin > 23) mesVer.fin = 23;
+  if(mesVer.ini < 0) mesVer.ini = 0;
   document.getElementById('mes-fin').value = mesVer.fin;
   actualizarColgroup();
   render();
@@ -576,7 +626,7 @@ function aplicarRango(){
 function actualizarColgroup(){
   var vis = mesesVisibles().length;
   // Ocultar/mostrar columnas de mes en thead
-  for(var j=0;j<12;j++){
+  for(var j=0;j<24;j++){
     var th = document.getElementById('th-m'+j);
     if(th) th.style.display = (j>=mesVer.ini && j<=mesVer.fin) ? '' : 'none';
   }
@@ -588,21 +638,23 @@ document.getElementById('mes-inicio').addEventListener('change', aplicarRango);
 document.getElementById('mes-fin').addEventListener('change', aplicarRango);
 
 document.getElementById('btn-mes-hoy').addEventListener('click', function(){
-  var hoy = new Date().getMonth();
-  document.getElementById('mes-inicio').value = hoy;
-  document.getElementById('mes-fin').value    = hoy;
+  var d = new Date();
+  var q = d.getMonth()*2 + (d.getDate()<=15?0:1);
+  document.getElementById('mes-inicio').value = q;
+  document.getElementById('mes-fin').value    = q;
   aplicarRango();
 });
 document.getElementById('btn-mes-trim').addEventListener('click', function(){
   var hoy = new Date().getMonth();
-  var fin = Math.min(hoy+2, 11);
-  document.getElementById('mes-inicio').value = hoy;
+  var ini = hoy*2;  // 1a quincena del mes actual
+  var fin = Math.min(hoy*2+5, 23);  // ~3 meses adelante
+  document.getElementById('mes-inicio').value = ini;
   document.getElementById('mes-fin').value    = fin;
   aplicarRango();
 });
 document.getElementById('btn-mes-todo').addEventListener('click', function(){
   document.getElementById('mes-inicio').value = 0;
-  document.getElementById('mes-fin').value    = 11;
+  document.getElementById('mes-fin').value    = 23;
   aplicarRango();
 });
 
@@ -620,7 +672,7 @@ function filaHTML(f){
   var metOpts = METS.map(function(o){ return '<option'+(o===f.metodo?' selected':'')+'>'+o+'</option>'; }).join('');
   var obsOpts = ['','Recurrente','Variable','Eventual'].map(function(o){ return '<option value="'+o+'"'+(o===f.obs?' selected':'')+'>'+(!o?'—':o)+'</option>'; }).join('');
   var celdas = '';
-  for(var j=0;j<12;j++){
+  for(var j=0;j<24;j++){
     var v   = f.montos[j];
     var esI = (f.inicio===j);
     var tieneValor = (v!==null && v!==undefined);
@@ -641,7 +693,7 @@ function filaHTML(f){
     }
     var tooltip = '';
     if(tieneValor && f.fecha) tooltip = ' title="'+esc(f.fecha)+'"';
-    else if(tieneValor) tooltip = ' title="'+MESES[j]+' '+S.anio+'"';
+    else if(tieneValor) tooltip = ' title="'+qLabel(j)+' '+S.anio+'"';
     celdas += '<td class="'+tdCls+'"'+tooltip+(vis?'':' style="display:none"')+'>'
       +'<input class="'+niCls+'" data-id="'+f.id+'" data-j="'+j+'" value="'+(tieneValor?fmt(v):'')+'" placeholder="—">'
       +'</td>';
@@ -704,7 +756,7 @@ function renderPie(){
   var ing = S.filas.filter(function(f){ return f.tipo==='ingreso'; });
   var tG=[],tI=[],rem=[];
   var anG=0, anI=0, anR=0;
-  for(var j=0;j<12;j++){
+  for(var j=0;j<24;j++){
     var g=0,i=0;
     gas.forEach(function(f){ g+=(f.montos[j]||0); });
     ing.forEach(function(f){ i+=(f.montos[j]||0); });
@@ -789,7 +841,7 @@ document.getElementById('btn-r-ok').addEventListener('click', function(){
   var fin  = parseInt(document.getElementById('r-fin').value);
   var val  = parseMonto(document.getElementById('r-val').value);
   if(!con){ document.getElementById('r-con').focus(); return; }
-  var m = Array(12).fill(null);
+  var m = Array(24).fill(null);
   for(var j=ini;j<=fin;j++) m[j]=val;
   S.filas.push({id:uid(),tipo:tipo,metodo:met,concepto:con,obs:obs,montos:m,inicio:ini});
   document.getElementById('dlg-rango').classList.remove('show');
@@ -823,11 +875,11 @@ document.getElementById('btn-l-ok').addEventListener('click', function(){
 // ─── EXCEL ───────────────────────────────────────────────────────────────────
 document.getElementById('btn-xl').addEventListener('click', function(){
   var wb = XLSX.utils.book_new();
-  var hdr = ['Tipo','Método','Concepto'].concat(MESES).concat(['Obs.']);
+  var hdr = ['Tipo','Método','Concepto'].concat(['Ene 1ª', 'Ene 2ª', 'Feb 1ª', 'Feb 2ª', 'Mar 1ª', 'Mar 2ª', 'Abr 1ª', 'Abr 2ª', 'May 1ª', 'May 2ª', 'Jun 1ª', 'Jun 2ª', 'Jul 1ª', 'Jul 2ª', 'Ago 1ª', 'Ago 2ª', 'Sep 1ª', 'Sep 2ª', 'Oct 1ª', 'Oct 2ª', 'Nov 1ª', 'Nov 2ª', 'Dic 1ª', 'Dic 2ª']).concat(['Obs.']);
   var rows = [hdr];
   S.filas.forEach(function(f){ rows.push([f.tipo==='ingreso'?'Ingreso':'Gasto',f.metodo,f.concepto].concat(f.montos.map(function(v){return v||'';})).concat([f.obs])); });
-  var tG=Array(12).fill(0), tI=Array(12).fill(0);
-  S.filas.forEach(function(f){ for(var j=0;j<12;j++){ if(f.tipo==='gasto') tG[j]+=(f.montos[j]||0); else tI[j]+=(f.montos[j]||0); } });
+  var tG=Array(24).fill(0), tI=Array(24).fill(0);
+  S.filas.forEach(function(f){ for(var j=0;j<24;j++){ if(f.tipo==='gasto') tG[j]+=(f.montos[j]||0); else tI[j]+=(f.montos[j]||0); } });
   rows.push(['','','Total Gastos'].concat(tG).concat(['']));
   rows.push(['','','Total Ingresos'].concat(tI).concat(['']));
   rows.push(['','','Remanente'].concat(tG.map(function(v,j){return tI[j]-v;})).concat(['']));
@@ -943,13 +995,13 @@ document.getElementById('btn-importar').addEventListener('click', function(){
   if(!sel.length) return;
   var enPlaneador = 0, soloDetalle = 0;
   sel.forEach(function(t){
-    var mes  = mesDeAmex(t.fecha);
+    var quin = quinDeAmex(t.fecha);
     var anio = anioDeAmex(t.fecha);
     // Solo agregar al planeador si el año coincide con el año activo
     if(anio === S.anio){
-      var montos = Array(12).fill(null);
-      montos[mes] = t.importe;
-      S.filas.push({id:uid(),tipo:t.tipo==='Egreso'?'gasto':'ingreso',metodo:'AMEX PLATINUM',concepto:t.desc.substring(0,55),obs:t.cat,montos:montos,inicio:mes,fecha:t.fecha});
+      var montos = Array(24).fill(null);
+      montos[quin] = t.importe;
+      S.filas.push({id:uid(),tipo:t.tipo==='Egreso'?'gasto':'ingreso',metodo:'AMEX PLATINUM',concepto:t.desc.substring(0,55),obs:t.cat,montos:montos,inicio:quin,fecha:t.fecha});
       enPlaneador++;
     } else {
       soloDetalle++;
@@ -977,10 +1029,13 @@ function addManual(tipo){
   var cat   = document.getElementById('m-c').value;
   var amt   = parseFloat(document.getElementById('m-a').value);
   if(!fecha||!desc||!amt||amt<=0){ document.getElementById('m-d').focus(); return; }
-  var mes = parseInt(fecha.split('-')[1])-1;
-  var montos = Array(12).fill(null);
-  if(mes>=0&&mes<=11) montos[mes]=amt;
-  S.filas.push({id:uid(),tipo:tipo==='Egreso'?'gasto':'ingreso',metodo:'Efectivo',concepto:desc,obs:cat,montos:montos,inicio:(mes>=0?mes:null),fecha:fecha});
+  var _pts = fecha.split('-');
+  var mes = parseInt(_pts[1])-1;
+  var dia = parseInt(_pts[2])||1;
+  var quin = mes*2 + (dia<=15?0:1);
+  var montos = Array(24).fill(null);
+  if(quin>=0&&quin<24) montos[quin]=amt;
+  S.filas.push({id:uid(),tipo:tipo==='Egreso'?'gasto':'ingreso',metodo:'Efectivo',concepto:desc,obs:cat,montos:montos,inicio:(quin>=0?quin:null),fecha:fecha});
   S.txs.unshift({id:uid(),fecha:fecha,desc:desc,tipo:tipo,cat:cat,importe:amt,origen:'manual'});
   document.getElementById('m-d').value='';
   document.getElementById('m-a').value='';
@@ -1062,7 +1117,7 @@ render();
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 var dashCharts = {};
 
-var MESES_DASH = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+var MESES_DASH = ['Ene 1ª', 'Ene 2ª', 'Feb 1ª', 'Feb 2ª', 'Mar 1ª', 'Mar 2ª', 'Abr 1ª', 'Abr 2ª', 'May 1ª', 'May 2ª', 'Jun 1ª', 'Jun 2ª', 'Jul 1ª', 'Jul 2ª', 'Ago 1ª', 'Ago 2ª', 'Sep 1ª', 'Sep 2ª', 'Oct 1ª', 'Oct 2ª', 'Nov 1ª', 'Nov 2ª', 'Dic 1ª', 'Dic 2ª'];
 var COLORES_BARRAS = ['#3B82F6','#10B981','#F59E0B','#EF4444','#8B5CF6','#EC4899','#06B6D4','#84CC16','#F97316','#6366F1','#14B8A6','#F43F5E'];
 
 function dashFmt(n){ return new Intl.NumberFormat('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0}).format(n||0); }
@@ -1071,15 +1126,15 @@ function dashFmtDec(n){ return new Intl.NumberFormat('es-MX',{minimumFractionDig
 function dashDatos(){
   var fuente = document.getElementById('dash-fuente').value;
   var anio   = parseInt(document.getElementById('dash-anio').value) || S.anio;
-  var ingrMes = Array(12).fill(0);
-  var gasMes  = Array(12).fill(0);
+  var ingrMes = Array(24).fill(0);
+  var gasMes  = Array(24).fill(0);
   var porConcepto = {};
 
   // Fuente: planeador (filas)
   if(fuente === 'plan' || fuente === 'ambos'){
     S.filas.forEach(function(f){
       var esIng = f.tipo === 'ingreso';
-      for(var j=0;j<12;j++){
+      for(var j=0;j<24;j++){
         var v = f.montos[j] || 0;
         if(!v) continue;
         // Para el planeador usamos el año activo del planeador
@@ -1098,11 +1153,11 @@ function dashDatos(){
     S.txs.forEach(function(t){
       var anioTx = anioDeAmex(t.fecha);
       if(anioTx !== anio) return;
-      var mes = mesDeAmex(t.fecha);
+      var quin = quinDeAmex(t.fecha);
       var v   = parseFloat(t.importe) || 0;
-      if(t.tipo === 'Ingreso') ingrMes[mes] += v;
+      if(t.tipo === 'Ingreso') ingrMes[quin] += v;
       else {
-        gasMes[mes] += v;
+        gasMes[quin] += v;
         var cat = t.cat || 'Sin categoría';
         porConcepto[cat] = (porConcepto[cat]||0) + v;
       }
@@ -1116,21 +1171,21 @@ function renderDashKPIs(d){
   var totalIng = d.ingrMes.reduce(function(a,b){return a+b;},0);
   var totalGas = d.gasMes.reduce(function(a,b){return a+b;},0);
   var remanente = totalIng - totalGas;
-  var mesActual = new Date().getMonth();
-  var ingMes = d.ingrMes[mesActual];
-  var gasMes = d.gasMes[mesActual];
+  var _d=new Date(); var quinActual=_d.getMonth()*2+(_d.getDate()<=15?0:1);
+  var ingMes = d.ingrMes[quinActual];
+  var gasMes = d.gasMes[quinActual];
   var pct = totalIng > 0 ? Math.round(totalGas/totalIng*100) : 0;
 
   document.getElementById('dash-kpis').innerHTML =
     '<div class="kpi-card kpi-ing">'
       +'<span class="kpi-label">Total Ingresos (año)</span>'
       +'<span class="kpi-val">$'+dashFmt(totalIng)+'</span>'
-      +'<span class="kpi-sub">'+MESES_DASH[mesActual]+': $'+dashFmt(ingMes)+'</span>'
+      +'<span class="kpi-sub">'+MESES_DASH[quinActual]+': $'+dashFmt(ingMes)+'</span>'
     +'</div>'
     +'<div class="kpi-card kpi-gas">'
       +'<span class="kpi-label">Total Gastos (año)</span>'
       +'<span class="kpi-val">$'+dashFmt(totalGas)+'</span>'
-      +'<span class="kpi-sub">'+MESES_DASH[mesActual]+': $'+dashFmt(gasMes)+'</span>'
+      +'<span class="kpi-sub">'+MESES_DASH[quinActual]+': $'+dashFmt(gasMes)+'</span>'
     +'</div>'
     +'<div class="kpi-card kpi-rem">'
       +'<span class="kpi-label">Remanente Anual</span>'
@@ -1258,34 +1313,41 @@ function renderTop(d){
 }
 
 function renderTablaResumen(d){
-  var rem = d.ingrMes.map(function(v,i){return v-d.gasMes[i];});
-  var totalIng = d.ingrMes.reduce(function(a,b){return a+b;},0);
-  var totalGas = d.gasMes.reduce(function(a,b){return a+b;},0);
-  var totalRem = totalIng - totalGas;
+  // Agrupamos quincenas en 12 meses para la tabla de resumen
+  var MESES_NOM = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  var totalIng=0, totalGas=0;
   var html = '<thead><tr style="background:#F5F4F0">'
     +'<th style="padding:7px 10px;border:1px solid #E8E6DF;text-align:left;font-size:11px">Mes</th>'
-    +'<th style="padding:7px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px;color:#1D9E75">Ingresos</th>'
-    +'<th style="padding:7px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px;color:#E8541A">Gastos</th>'
+    +'<th style="padding:7px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px">1ª Ing</th>'
+    +'<th style="padding:7px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px">1ª Gas</th>'
+    +'<th style="padding:7px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px">2ª Ing</th>'
+    +'<th style="padding:7px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px">2ª Gas</th>'
+    +'<th style="padding:7px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px;color:#1D9E75">Ing Total</th>'
+    +'<th style="padding:7px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px;color:#E8541A">Gas Total</th>'
     +'<th style="padding:7px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px">Remanente</th>'
-    +'<th style="padding:7px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px">% Gasto/Ing</th>'
     +'</tr></thead><tbody>';
-  MESES_DASH.forEach(function(m,i){
-    var pct = d.ingrMes[i]>0 ? Math.round(d.gasMes[i]/d.ingrMes[i]*100) : (d.gasMes[i]>0?100:0);
-    var r = rem[i];
+  for(var m=0;m<12;m++){
+    var q1i=d.ingrMes[m*2]||0, q1g=d.gasMes[m*2]||0;
+    var q2i=d.ingrMes[m*2+1]||0, q2g=d.gasMes[m*2+1]||0;
+    var mIng=q1i+q2i, mGas=q1g+q2g, rem=mIng-mGas;
+    totalIng+=mIng; totalGas+=mGas;
     html += '<tr>'
-      +'<td style="padding:5px 10px;border:1px solid #E8E6DF;font-weight:600;font-size:11px">'+m+'</td>'
-      +'<td style="padding:5px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px;color:#1D9E75">$'+dashFmtDec(d.ingrMes[i])+'</td>'
-      +'<td style="padding:5px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px;color:#E8541A">$'+dashFmtDec(d.gasMes[i])+'</td>'
-      +'<td style="padding:5px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px;color:'+(r>=0?'#1D9E75':'#8B1A1A')+';font-weight:600">$'+dashFmtDec(r)+'</td>'
-      +'<td style="padding:5px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px">'+(d.ingrMes[i]||d.gasMes[i]?pct+'%':'—')+'</td>'
+      +'<td style="padding:5px 10px;border:1px solid #E8E6DF;font-weight:600;font-size:11px">'+MESES_NOM[m]+'</td>'
+      +'<td style="padding:5px 10px;border:1px solid #E8E6DF;text-align:right;font-size:10px;color:#1D9E75">'+(q1i?'$'+dashFmtDec(q1i):'—')+'</td>'
+      +'<td style="padding:5px 10px;border:1px solid #E8E6DF;text-align:right;font-size:10px;color:#E8541A">'+(q1g?'$'+dashFmtDec(q1g):'—')+'</td>'
+      +'<td style="padding:5px 10px;border:1px solid #E8E6DF;text-align:right;font-size:10px;color:#1D9E75">'+(q2i?'$'+dashFmtDec(q2i):'—')+'</td>'
+      +'<td style="padding:5px 10px;border:1px solid #E8E6DF;text-align:right;font-size:10px;color:#E8541A">'+(q2g?'$'+dashFmtDec(q2g):'—')+'</td>'
+      +'<td style="padding:5px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px;color:#1D9E75;font-weight:600">'+(mIng?'$'+dashFmtDec(mIng):'—')+'</td>'
+      +'<td style="padding:5px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px;color:#E8541A;font-weight:600">'+(mGas?'$'+dashFmtDec(mGas):'—')+'</td>'
+      +'<td style="padding:5px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px;color:'+(rem>=0?'#1D9E75':'#8B1A1A')+';font-weight:700">$'+dashFmtDec(rem)+'</td>'
       +'</tr>';
-  });
+  }
+  var totalRem=totalIng-totalGas;
   html += '<tr style="background:#F5F4F0;font-weight:700">'
-    +'<td style="padding:6px 10px;border:1px solid #E8E6DF;font-size:11px">TOTAL</td>'
+    +'<td style="padding:6px 10px;border:1px solid #E8E6DF;font-size:11px" colspan="5">TOTAL ANUAL</td>'
     +'<td style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px;color:#1D9E75">$'+dashFmtDec(totalIng)+'</td>'
     +'<td style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px;color:#E8541A">$'+dashFmtDec(totalGas)+'</td>'
     +'<td style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px;color:'+(totalRem>=0?'#1D9E75':'#8B1A1A')+'">$'+dashFmtDec(totalRem)+'</td>'
-    +'<td style="padding:6px 10px;border:1px solid #E8E6DF;text-align:right;font-size:11px">'+(totalIng>0?Math.round(totalGas/totalIng*100)+'%':'—')+'</td>'
     +'</tr></tbody>';
   document.getElementById('dash-tabla').innerHTML = html;
 }
