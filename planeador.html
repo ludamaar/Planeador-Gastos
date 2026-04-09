@@ -116,9 +116,11 @@ button.del:hover{background:#FAECE7;color:#D85A30}
 /* DETALLE */
 .frow{display:flex;gap:6px;margin-bottom:.75rem;flex-wrap:wrap;align-items:center}
 .frow select,.frow input[type=month]{font-size:11px;padding:4px 7px;border:1px solid #D3D1C7;border-radius:5px;background:#fff;font-family:Arial;color:#2C2C2A}
-.dtbl{width:100%;border-collapse:collapse;font-size:11px}
+.dtbl{width:100%;border-collapse:collapse;font-size:11px;table-layout:auto}
 .dtbl th{background:#2C2C2A;color:#fff;padding:6px 8px;text-align:left;font-size:10px;letter-spacing:.04em;white-space:nowrap}
-.dtbl td{padding:6px 8px;border-bottom:1px solid #eee;vertical-align:middle;max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dtbl td{padding:5px 8px;border-bottom:1px solid #eee;vertical-align:middle}
+.dtbl td:nth-child(2){max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dtbl td:nth-child(3){max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;color:#5F5E5A}
 .dtbl tr:nth-child(even) td{background:#f7f6f2}
 .dtbl td.ar{text-align:right;font-weight:700}
 .badge{display:inline-block;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:700}
@@ -327,10 +329,13 @@ button.del2:hover{background:#FAECE7;color:#D85A30}
   <div style="background:#fff;border-radius:8px;border:1px solid #D3D1C7;overflow-x:auto">
     <table class="dtbl">
       <thead><tr>
-        <th style="width:90px">Fecha</th><th>Descripción</th>
-        <th style="width:190px">Referencia / RFC</th>
-        <th style="width:160px">Categoría</th><th style="width:76px">Tipo</th>
-        <th style="width:66px">Origen</th><th style="width:110px;text-align:right">Importe</th>
+        <th style="width:90px;white-space:nowrap">Fecha</th>
+        <th style="min-width:180px">Descripción</th>
+        <th style="min-width:140px;max-width:260px">Referencia / RFC</th>
+        <th style="width:150px">Categoría</th>
+        <th style="width:70px">Tipo</th>
+        <th style="width:60px">Origen</th>
+        <th style="width:100px;text-align:right">Importe</th>
         <th style="width:28px"></th>
       </tr></thead>
       <tbody id="det-body"></tbody>
@@ -633,12 +638,20 @@ function aplicarRango(){
 
 function actualizarColgroup(){
   var vis = mesesVisibles().length;
-  // Ocultar/mostrar columnas de mes en thead
   for(var j=0;j<24;j++){
     var th = document.getElementById('th-m'+j);
     if(th) th.style.display = (j>=mesVer.ini && j<=mesVer.fin) ? '' : 'none';
   }
-  // Actualizar colspan del año
+  // Actualizar encabezados de mes agrupados
+  for(var m=0;m<12;m++){
+    var thm = document.getElementById('th-mes-'+m);
+    if(!thm) continue;
+    var q1v = (m*2>=mesVer.ini && m*2<=mesVer.fin);
+    var q2v = (m*2+1>=mesVer.ini && m*2+1<=mesVer.fin);
+    var cnt = (q1v?1:0)+(q2v?1:0);
+    thm.style.display = cnt>0 ? '' : 'none';
+    thm.setAttribute('colspan', cnt||1);
+  }
   document.getElementById('th-anio').setAttribute('colspan', vis);
 }
 
@@ -736,7 +749,7 @@ function renderBody(){
   var ings  = sortPorFecha(S.filas.filter(function(f){
     if(f.tipo!=='ingreso') return false;
     // Si es "Todo el año" (12 meses) mostrar todas
-    if(mesVer.ini===0 && mesVer.fin===11) return true;
+    if(mesVer.ini===0 && mesVer.fin===23) return true;
     // Si no tiene fecha (fila base del planeador) mostrar siempre
     if(!f.fecha) return true;
     // Mostrar solo si tiene valor en algún mes visible
@@ -745,7 +758,7 @@ function renderBody(){
   }));
   var gas   = sortPorFecha(S.filas.filter(function(f){
     if(f.tipo!=='gasto') return false;
-    if(mesVer.ini===0 && mesVer.fin===11) return true;
+    if(mesVer.ini===0 && mesVer.fin===23) return true;
     if(!f.fecha) return true;
     for(var j=mesVer.ini;j<=mesVer.fin;j++){ if(f.montos[j]!==null && f.montos[j]!==undefined) return true; }
     return false;
@@ -1238,14 +1251,21 @@ function destroyChart(id){
 
 function renderBarras(d){
   destroyChart('barras');
+  // Filtrar solo el rango seleccionado
+  var labels=[], ingData=[], gasData=[];
+  for(var q=d.qIni;q<=d.qFin;q++){
+    labels.push(MESES_DASH[q]);
+    ingData.push(d.ingrMes[q]||0);
+    gasData.push(d.gasMes[q]||0);
+  }
   var ctx = document.getElementById('ch-barras').getContext('2d');
   dashCharts['barras'] = new Chart(ctx, {
     type:'bar',
     data:{
-      labels: MESES_DASH,
+      labels: labels,
       datasets:[
-        {label:'Ingresos',data:d.ingrMes,backgroundColor:'rgba(29,158,117,.75)',borderRadius:4},
-        {label:'Gastos',data:d.gasMes,backgroundColor:'rgba(232,84,26,.75)',borderRadius:4}
+        {label:'Ingresos',data:ingData,backgroundColor:'rgba(29,158,117,.75)',borderRadius:4},
+        {label:'Gastos',data:gasData,backgroundColor:'rgba(232,84,26,.75)',borderRadius:4}
       ]
     },
     options:{responsive:true,
@@ -1266,21 +1286,25 @@ function renderBarras(d){
 
 function renderLinea(d){
   destroyChart('linea');
-  var rem = d.ingrMes.map(function(v,i){return v - d.gasMes[i];});
+  var labels=[], remData=[];
+  for(var q=d.qIni;q<=d.qFin;q++){
+    labels.push(MESES_DASH[q]);
+    remData.push((d.ingrMes[q]||0) - (d.gasMes[q]||0));
+  }
   var ctx = document.getElementById('ch-linea').getContext('2d');
   dashCharts['linea'] = new Chart(ctx, {
     type:'line',
     data:{
-      labels: MESES_DASH,
+      labels: labels,
       datasets:[{
         label:'Remanente',
-        data:rem,
+        data:remData,
         borderColor:'#3B82F6',
         backgroundColor:'rgba(59,130,246,.1)',
         fill:true,
         tension:.35,
         pointRadius:4,
-        pointBackgroundColor: rem.map(function(v){return v>=0?'#1D9E75':'#E8541A'})
+        pointBackgroundColor: remData.map(function(v){return v>=0?'#1D9E75':'#E8541A'})
       }]
     },
     options:{responsive:true,plugins:{legend:{display:false}},
