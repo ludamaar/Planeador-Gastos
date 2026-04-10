@@ -292,6 +292,7 @@ button.del2:hover{background:#FAECE7;color:#D85A30}
   <button class="sn" id="sn-import" type="button">Cargar estado de cuenta</button>
   <button class="sn" id="sn-det" type="button">Detalle movimientos</button>
   <button class="sn" id="sn-dash" type="button">📊 Dashboard</button>
+  <button class="sn" id="sn-cats" type="button">📋 Por Categoría</button>
 </div>
 
 <!-- PLANEADOR -->
@@ -405,6 +406,7 @@ button.del2:hover{background:#FAECE7;color:#D85A30}
     <select id="fc"><option value="all">Todas categorías</option></select>
     <input type="month" id="fm">
     <button class="badd bg" id="btn-exp-det" type="button">&#8595; Exportar</button>
+    <button class="badd" id="btn-reclasificar" type="button" style="background:#8B5CF6;color:#fff;border-radius:5px;padding:5px 12px;font-size:11px;border:none;cursor:pointer;font-family:Arial" title="Aplicar reglas de clasificación actuales a todos los movimientos importados">&#9965; Reclasificar todo</button>
     <span id="det-st" style="font-size:11px;color:#888780"></span>
   </div>
   <div style="background:#fff;border-radius:8px;border:1px solid #D3D1C7;overflow-x:auto">
@@ -478,6 +480,34 @@ button.del2:hover{background:#FAECE7;color:#D85A30}
     <div class="dash-title">Resumen por Mes</div>
     <div style="overflow-x:auto">
       <table id="dash-tabla" style="width:100%;border-collapse:collapse;font-size:11px;font-family:Arial"></table>
+    </div>
+  </div>
+</div>
+
+<!-- POR CATEGORÍA -->
+<div class="sec" id="sec-cats">
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+    <span style="font-size:11px;color:#888780">Año:</span>
+    <select id="cats-anio" style="background:#fff;border:1px solid #D3D1C7;border-radius:5px;font-size:12px;padding:4px 8px;font-family:Arial"></select>
+    <button id="btn-cats-refresh" type="button" style="background:#1D9E75;color:#fff;border:none;border-radius:5px;font-size:11px;padding:5px 12px;cursor:pointer;font-family:Arial">↻ Actualizar</button>
+    <span id="cats-rango-lbl" style="font-size:10px;color:#888780;background:#fff;border:1px solid #D3D1C7;border-radius:4px;padding:3px 8px"></span>
+    <span style="font-size:10px;color:#888780;margin-left:auto">Clic en una tarjeta o barra para ver el desglose</span>
+  </div>
+
+  <!-- KPI Cards por categoría -->
+  <div id="cats-kpis" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:16px"></div>
+
+  <!-- Barras por categoría -->
+  <div class="dash-card" style="margin-bottom:12px">
+    <div class="dash-title">Gasto por Categoría (período seleccionado)</div>
+    <canvas id="ch-cats-barras" height="300"></canvas>
+  </div>
+
+  <!-- Tabla mes a mes por categoría -->
+  <div class="dash-card" style="margin-bottom:12px">
+    <div class="dash-title">Comparativo Mensual por Categoría</div>
+    <div style="overflow-x:auto">
+      <table id="cats-tabla" style="width:100%;border-collapse:collapse;font-size:11px;font-family:Arial;min-width:900px"></table>
     </div>
   </div>
 </div>
@@ -705,7 +735,7 @@ function anioDeAmex(fecha){
 }
 
 // ─── SECCIONES ────────────────────────────────────────────────────────────────
-const SECCIONES = ['plan','import','det','dash'];
+const SECCIONES = ['plan','import','det','dash','cats'];
 
 function irA(id){
   SECCIONES.forEach(function(s){
@@ -715,12 +745,14 @@ function irA(id){
   document.getElementById('barra').style.display = (id==='plan') ? 'flex' : 'none';
   if(id==='det') renderDetalle();
   if(id==='dash') renderDash();
+  if(id==='cats') renderCats();
 }
 
 document.getElementById('sn-plan').addEventListener('click', function(){ irA('plan'); });
 document.getElementById('sn-import').addEventListener('click', function(){ irA('import'); });
 document.getElementById('sn-det').addEventListener('click', function(){ irA('det'); });
 document.getElementById('sn-dash').addEventListener('click', function(){ irA('dash'); });
+document.getElementById('sn-cats').addEventListener('click', function(){ irA('cats'); });
 
 // ─── RANGO DE MESES VISIBLE ───────────────────────────────────────────────────
 var mesVer = { ini:0, fin:23 };
@@ -954,8 +986,19 @@ document.getElementById('tbody').addEventListener('click', function(e){
   var id = parseFloat(btn.getAttribute('data-del'));
   var filaDel = S.filas.filter(function(x){ return x.id===id; })[0];
   var idxDel  = S.filas.findIndex(function(x){ return x.id===id; });
-  if(filaDel){ _undoStack.push({tipo:'fila',item:filaDel,idx:idxDel}); if(_undoStack.length>MAX_UNDO) _undoStack.shift(); }
+  // Buscar tx relacionado por concepto + fecha para eliminarlo también
+  var txDel = null, txIdx = -1;
+  if(filaDel && filaDel.fecha){
+    txIdx = S.txs.findIndex(function(t){
+      return t.fecha === filaDel.fecha &&
+             Math.abs(parseFloat(t.importe) - Math.max.apply(null, filaDel.montos.filter(function(v){return v!=null;})||[0])) < 0.01;
+    });
+    if(txIdx >= 0) txDel = S.txs[txIdx];
+  }
+  if(filaDel){ _undoStack.push({tipo:'fila',item:filaDel,idx:idxDel,txDel:txDel,txIdx:txIdx}); if(_undoStack.length>MAX_UNDO) _undoStack.shift(); }
   S.filas = S.filas.filter(function(x){ return x.id!==id; });
+  // Marcar tx como excluido del dashboard (no eliminarlo del Detalle)
+  if(txIdx >= 0) S.txs[txIdx]._excluido = true;
   guardar(); render();
   document.getElementById('btn-undo').style.display='';
 });
@@ -1051,25 +1094,81 @@ document.getElementById('btn-xl').addEventListener('click', function(){
 });
 
 // ─── CLASIFICAR ───────────────────────────────────────────────────────────────
-function clasificar(d,imp){
-  var u=d.toUpperCase();
-  if(imp<0) return 'Pagos / Abonos';
-  if(/GRACIAS POR SU PAGO|REVERSION|CREDITO|REDENCION/.test(u)) return 'Pagos / Abonos';
+function clasificar(d, imp){
+  var u = d.toUpperCase();
+
+  // ── Ingresos / Abonos ─────────────────────────────────────────────────────
+  if(imp < 0) return 'Pagos / Abonos';
+  if(/GRACIAS POR SU PAGO|REVERSION|CREDITO|REDENCION|DEVOLUCION/.test(u)) return 'Pagos / Abonos';
+
+  // ── Deuda / Comisiones ────────────────────────────────────────────────────
   if(/COMISI|CUOTA ANUAL|IVA APLICABLE|PLAN DE PAGOS|SERVICIO DE FACTURACION/.test(u)) return 'Deuda / Comisiones Tarjeta';
-  if(/SEGUROS|ZURICH|AXA |GNP|RING SOLO/.test(u)) return 'Seguros';
-  if(/UDEM|UNIVERSIDAD|INST DE ESTUDI|UDEMY|DUOLINGO|CAPACITACION|EDUMART|MCGRAW/.test(u)) return 'Educación / Cursos';
-  if(/PETRO|OXXO GAS|PASE |AUTOPISTA|AUTOZONE|CAR WASH|UBER|SERVIGAZ/.test(u)) return 'Transporte / Gasolina';
-  if(/COMISION FEDERAL|AXTEL|TELCEL|TELMEX|TELEFONOS DE MEXICO|SERV AGUA|CABLE Y COMU/.test(u)) return 'Servicios (luz, agua, gas, tel)';
-  if(/NETFLIX|SPOTIFY|APPLE\.|GOOGLE ONE|MICROSOFT|CLAUDE\.AI|AMAZON MX\*PRIME|CARGO RECURRENTE ATT/.test(u)) return 'Suscripciones / Streaming';
-  if(/H-E-B|HEB |FRESKO|NATU CUMBRES|SMART CUMBRES|SUPERCENTER|WALMART/.test(u)) return 'Despensa / Supermercado';
-  if(/DOMINOS|7 ELEVEN|REST |CINEPOLIS|CARNES|TAQUERIA|TERRAZA|BAR CAMPEST|PANYOLI/.test(u)) return 'Restaurantes / Comida';
-  if(/FARMACIAS|PODOLOG|SERV DR/.test(u)) return 'Salud / Médico';
-  if(/WORLD GYM|SPORTS WORLD|GREAT FITNESS|NATURGYMEXI/.test(u)) return 'Deporte / Gym';
-  if(/VIVAAEROBUS|VOLARIS|DESPEGAR|PRICETRAVEL|ETN TURISTAR|VENTA A BORDO/.test(u)) return 'Viajes / Vuelos';
-  if(/AMAZON MX|MERCADOPAGO|PAYPAL|AKKY/.test(u)) return 'Compras en línea';
-  if(/FERRAGAMO|ECLIPSESHOP/.test(u)) return 'Ropa / Moda';
+
+  // ── Seguros ───────────────────────────────────────────────────────────────
+  if(/SEGUROS|ZURICH|AXA |GNP |SGMNYL|AFORE|INBURSA SEG/.test(u)) return 'Seguros';
+
+  // ── Educación ─────────────────────────────────────────────────────────────
+  if(/UDEM|UNIVERSIDAD|INST DE ESTUDI|INST IENU|IENU|UDEMY|DUOLINGO|CAPACITACION|EDUMART|MCGRAW|COLEGIO|ESCUELA|TECNOLOGICO|COURSERA|PLATZI|COMERCIO ELECTRONICO/.test(u)) return 'Educación / Cursos';
+
+  // ── Apple ─────────────────────────────────────────────────────────────────
+  if(/APPLE\.|APPLE\.COM|APPLEID|APPLE STORE|APPLE ONE|ITUNES/.test(u)) return 'Apple';
+
+  // ── Amazon ────────────────────────────────────────────────────────────────
+  if(/AMAZON MX|AMAZON\.COM|AMAZON MX MSI|AMZN|AMAZON PRIME/.test(u)) return 'Amazon';
+
+  // ── Mercado Libre ─────────────────────────────────────────────────────────
+  if(/MERCADO LIBRE|MERCADOLIBRE|MERCADOPAGO|MELI /.test(u)) return 'Mercado Libre';
+
+  // ── Software / Suscripciones ──────────────────────────────────────────────
+  if(/ADOBE|LIVECAREER|SPOTIFY|YOUTUBE|CLAUDE|CHATGPT|OPENAI|MICROSOFT|GOOGLE ONE|GOOGLE STORAGE|NETFLIX|PARAMOUNT|DISNEY|HBO |MSBILL\.INFO|NAMECHEAP|NAME-CHEAP|WOUL5P|RING SOLO|AKKY|LINKEDIN/.test(u)) return 'Software / Suscripciones';
+
+  // ── Telefonía Celular ─────────────────────────────────────────────────────
+  if(/TELCEL|AT&T|ATT MOVIL|CGO AUT TELCEL|CARGO RECURRENTE ATT|MOVISTAR|CONEKTA\*MIBAIT|CONECTA\*MIBAIT/.test(u)) return 'Telefonía Celular';
+
+  // ── Telefonía Fija e Internet ─────────────────────────────────────────────
+  if(/AXTEL|TELMEX|TELEFONOS DE MEXICO|TOTALPLAY|IZZI|MEGACABLE|MULTISERVICIO/.test(u)) return 'Telefonía / Internet';
+
+  // ── Servicios del Hogar (gas, luz, agua) ──────────────────────────────────
+  if(/COMISION FEDERAL|CFE |SERV AGUA|SIMAS|GAS NATURAL|CABLE Y COMU|NATURGYMEXI/.test(u)) return 'Servicios del Hogar';
+
+  // ── Transporte / Gasolina ─────────────────────────────────────────────────
+  if(/PETRO|OXXO GAS|ORSAN|GASOLINERA|COMBUSTIBLE|PASE |AUTOPISTA|AUTOZONE|UBER|SERVIGAZ|DIDI|CABIFY|AUTOBUSES|PAYPAL \*AUTOBUSES|MERA AEROPUERTOS|AEROCOMIDAS|TAXIS|TRANSP AXII/.test(u)) return 'Transporte / Gasolina';
+
+  // ── Autolavado ────────────────────────────────────────────────────────────
+  if(/CAR WASH/.test(u)) return 'Autolavado';
+
+  // ── Viajes / Vuelos ───────────────────────────────────────────────────────
+  if(/VIVAAEROBUS|VOLARIS|AEROMEXICO|EXPEDIA|DESPEGAR|PRICETRAVEL|PLAN N TRAVEL|ETN TURISTAR|VENTA A BORDO|HOTEL|AIRBNB|BOOKING|AEROPUERTO|PARROQUIA DE TALPA/.test(u)) return 'Viajes / Vuelos';
+
+  // ── Tintorería / Lavandería ───────────────────────────────────────────────
+  if(/GREEN CLEAN/.test(u)) return 'Tintorería / Lavandería';
+
+  // ── Deporte / Gym ─────────────────────────────────────────────────────────
+  if(/WORLD GYM|SPORTS WORLD|GREAT FITNESS|RFCOAS050406RT6|DECATHLON|SPORT CITY|GIMNASIO|OPERADORA Y ADMINISTRAD/.test(u)) return 'Deporte / Gym';
+
+  // ── Despensa / Supermercado ───────────────────────────────────────────────
+  if(/H-E-B|HEB |FRESKO|NATU CUMBRES|SMART CUMBRES|SUPERCENTER|WALMART|COSTCO|SAMS CLUB|LA COMER|SORIANA|CHEDRAUI|LAPU ALIMENTOS|ABARRO|LA CASA DEL WAFFLE/.test(u)) return 'Despensa / Supermercado';
+
+  // ── Salud / Farmacia ──────────────────────────────────────────────────────
+  if(/FARMACIA|FBENAVIDES|F AHORRO|PODOLOG|SERV DR|CLINICA|HOSPITAL|MEDICA|LABORATORIO|DENTIST|DOCTOR|PELUQ|BARBERIA|BARBER|TONSORIAL/.test(u)) return 'Salud / Estética';
+
+  // ── Ropa / Moda ───────────────────────────────────────────────────────────
+  if(/FERRAGAMO|ECLIPSESHOP|ZARA|H&M |LIVERPOOL|PALACIO DE HIERRO|SUBURBIA|RETAIL IN MOTION|BOUT BLANCO|BOUT NEGRO|TUX /.test(u)) return 'Ropa / Moda';
+
+  // ── Restaurantes / Comida ─────────────────────────────────────────────────
+  if(/DOMINOS|7 ELEVEN|REST |CINEPOLIS|CARNES|TAQUERIA|TERRAZA|BAR |PANYOLI|STARBUCKS|MC DONALDS|MCDONALDS|BURGER|KFC |SUBWAY|SUSHI|PIZZA|OXXO MEXICO|BOTANERO|TARO HAUS|LOS AUTENT/.test(u)) return 'Restaurantes / Comida';
+
+  // ── Compras en línea ──────────────────────────────────────────────────────
+  if(/PAYPAL|EBAY|ALIEXPRESS|SHEIN|ISHOP|ENVIAFLORES/.test(u)) return 'Compras en línea';
+
+  // ── Servicios Profesionales ───────────────────────────────────────────────
+  if(/BILLPOCKET|CORPORACION NOVAVISION|NAT MONTERREY|NETPAY\*AUTOTRANSPORTE|LA H1DALGUENSE|RELOJ THE CLEANY/.test(u)) return 'Servicios Profesionales';
+
   return 'Otro egreso';
 }
+
+
+
 
 // ─── CARGAR ARCHIVO ───────────────────────────────────────────────────────────
 function loadFile(file){
@@ -1307,8 +1406,8 @@ function renderDetalle(){
   var tE=data.filter(function(t){return t.tipo==='Egreso';}).reduce(function(s,t){return s+t.importe;},0);
   document.getElementById('det-st').textContent = data.length+' movs · Egresos: '+fmt(tE);
   tbody.innerHTML = data.map(function(t){
-    return '<tr>'
-      +'<td style="font-size:10px;color:#888780;min-width:80px">'+t.fecha+'</td>'
+    return '<tr style="'+(t._excluido?'opacity:.55':'')+'" title="'+(t._excluido?'Excluido del dashboard':'')+'">' 
+      +'<td style="font-size:10px;color:#888780;min-width:80px">'+t.fecha+(t._excluido?' <span style="font-size:9px;color:#B4B2A9">[excl.]</span>':'')+' </td>'
       +'<td title="'+esc(t.desc)+'">'+esc(t.desc)+'</td>'
       +'<td style="font-size:9px;color:#5F5E5A;word-break:break-all" title="'+esc(t.ref||'')+'">'+esc(t.ref||'—')+'</td>'
       +'<td style="font-size:10px;color:#5F5E5A">'+t.cat+'</td>'
@@ -1329,6 +1428,19 @@ document.getElementById('det-body').addEventListener('click', function(e){
   var id  = parseFloat(btn.getAttribute('data-txid'));
   S.txs   = S.txs.filter(function(t){ return t.id!==id; });
   guardar(); renderDetalle();
+});
+
+document.getElementById('btn-reclasificar').addEventListener('click', function(){
+  var count = 0;
+  S.txs.forEach(function(t){
+    if(t.tipo === 'Egreso'){
+      var newCat = clasificar(t.desc, parseFloat(t.importe)||0);
+      if(newCat !== t.cat){ t.cat = newCat; count++; }
+    }
+  });
+  guardar();
+  renderDetalle();
+  alert('Reclasificados: ' + count + ' movimientos actualizados.');
 });
 
 document.getElementById('btn-exp-det').addEventListener('click', function(){
@@ -1368,16 +1480,13 @@ document.getElementById('dash-sb-overlay').addEventListener('click', sbClose);
 
 // ─── Drill: Categoría (desde dona o top10) ───────────────────────────────────
 function drillCategoria(cat, d){
+  var anioD = parseInt(document.getElementById('dash-anio').value)||S.anio;
   var movs = (S.txs || []).filter(function(t){
-    if(!t.cat || t.cat !== cat) return false;
-    var anio = anioDeAmex(t.fecha);
-    if(anio !== (parseInt(document.getElementById('dash-anio').value)||S.anio)) return false;
+    if(t._excluido) return false;
+    if(!t.cat || t.cat.trim() !== cat) return false;
+    if(anioDeAmex(t.fecha) !== anioD) return false;
     var q = quinDeAmex(t.fecha);
     return q >= d.qIni && q <= d.qFin;
-  });
-  // Also from planeador filas
-  var filasMatch = S.filas.filter(function(f){
-    return f.tipo==='gasto' && (f.concepto||'').indexOf(cat)>=0;
   });
 
   movs.sort(function(a,b){ return fechaOrden(a).localeCompare(fechaOrden(b)); });
@@ -1538,56 +1647,61 @@ function dashFmt(n){ return new Intl.NumberFormat('es-MX',{minimumFractionDigits
 function dashFmtDec(n){ return new Intl.NumberFormat('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n||0); }
 
 function dashDatos(){
-  var fuente  = document.getElementById('dash-fuente').value;
-  var anio    = parseInt(document.getElementById('dash-anio').value) || S.anio;
-  // Rango de quincenas del selector del planeador
-  var qIni    = mesVer.ini;
-  var qFin    = mesVer.fin;
-  var ingrMes = Array(24).fill(0);
-  var gasMes  = Array(24).fill(0);
-  var porConcepto = {};
-  var planes  = {};  // para planes de pago
+  var fuente = document.getElementById('dash-fuente').value;
+  var anio   = parseInt(document.getElementById('dash-anio').value) || S.anio;
+  var qIni   = mesVer.ini;
+  var qFin   = mesVer.fin;
 
-  // Fuente: planeador (filas)
+  var ingrMes     = Array(24).fill(0);
+  var gasMes      = Array(24).fill(0);
+  var porCategoria= {};  // SOLO por categoría (txs) — consistente con dona y Top10
+  var porConcepto = porCategoria; // alias para código existente
+  var planes      = {};
+
+  // ── Fuente: planeador (filas) ─────────────────────────────────────────────
+  // El planeador contribuye a ingrMes/gasMes pero NO a porCategoria
+  // (los conceptos del planeador son nombres libres, no categorías Amex)
   if(fuente === 'plan' || fuente === 'ambos'){
     S.filas.forEach(function(f){
       var esIng = f.tipo === 'ingreso';
       for(var j=0;j<24;j++){
-        if(j < qIni || j > qFin) continue;  // respetar rango
+        if(j < qIni || j > qFin) continue;
         var v = f.montos[j] || 0;
         if(!v) continue;
         if(esIng) ingrMes[j] += v;
-        else {
-          gasMes[j] += v;
-          var key = f.concepto || 'Sin concepto';
-          porConcepto[key] = (porConcepto[key]||0) + v;
-        }
+        else      gasMes[j]  += v;
       }
     });
   }
 
-  // Fuente: movimientos importados (txs)
+  // ── Fuente: movimientos Amex (txs) ────────────────────────────────────────
+  // Contribuye a ingrMes/gasMes Y a porCategoria (usando t.cat)
   if(fuente === 'txs' || fuente === 'ambos'){
     S.txs.forEach(function(t){
+      if(t._excluido) return;
       var anioTx = anioDeAmex(t.fecha);
       if(anioTx !== anio) return;
       var quin = quinDeAmex(t.fecha);
-      if(quin < qIni || quin > qFin) return;  // respetar rango
-      var v   = parseFloat(t.importe) || 0;
-      if(t.tipo === 'Ingreso') ingrMes[quin] += v;
-      else {
+      if(quin < qIni || quin > qFin) return;
+      var v = parseFloat(t.importe) || 0;
+      if(!v) return;
+
+      if(t.tipo === 'Ingreso'){
+        ingrMes[quin] += v;
+      } else {
         gasMes[quin] += v;
-        var cat = t.cat || 'Sin categoría';
-        porConcepto[cat] = (porConcepto[cat]||0) + v;
-        // Detectar planes de pago: "CARGO 03 DE 06" o "3/6" etc.
+
+        // Categoría para dona y Top10
+        var cat = (t.cat || 'Sin categoría').trim();
+        porCategoria[cat] = (porCategoria[cat]||0) + v;
+
+        // Detectar planes de pago
         var planM = t.desc.match(/CARGO\s+(\d+)\s+DE\s+(\d+)/i) ||
-                    t.desc.match(/(\d+)\s*\/\s*(\d+)\s*(MSI|MES|MESES)?/i) ||
-                    t.desc.match(/PLAN\s+(\d+)\s*(?:DE|\/)\s*(\d+)/i);
+                    t.ref && t.ref.match(/CARGO\s+(\d+)\s+DE\s+(\d+)/i);
         if(planM){
           var actual = parseInt(planM[1]), total = parseInt(planM[2]);
           if(actual>=1 && total>=2 && total<=60){
-            // Normalizar nombre del concepto sin el número de cargo
-            var base = t.desc.replace(/CARGO\s+\d+\s+DE\s+\d+/i,'').replace(/\d+\s*\/\s*\d+\s*(MSI|MES|MESES)?/i,'').trim();
+            var base = t.desc.replace(/CARGO\s+\d+\s+DE\s+\d+/i,'').trim();
             base = base.replace(/\s{2,}/g,' ').substring(0,40);
             var pk = base+'|||'+total;
             if(!planes[pk]) planes[pk]={base:base,total:total,pagos:[],importeUn:v,totalAcum:0};
@@ -1599,8 +1713,9 @@ function dashDatos(){
     });
   }
 
-  return { ingrMes:ingrMes, gasMes:gasMes, porConcepto:porConcepto, planes:planes, qIni:qIni, qFin:qFin };
+  return { ingrMes:ingrMes, gasMes:gasMes, porConcepto:porCategoria, planes:planes, qIni:qIni, qFin:qFin };
 }
+
 
 function renderDashKPIs(d){
   var totalIng = d.ingrMes.reduce(function(a,b){return a+b;},0);
@@ -1630,7 +1745,7 @@ function renderDashKPIs(d){
     +'<div class="kpi-card">'
       +'<span class="kpi-label">Categorías únicas</span>'
       +'<span class="kpi-val">'+Object.keys(d.porConcepto).length+'</span>'
-      +'<span class="kpi-sub">conceptos de gasto</span>'
+      +'<span class="kpi-sub">categorías Amex</span>'
     +'</div>';
 }
 
@@ -1773,7 +1888,10 @@ function renderTop(d){
   var pares = Object.entries ? Object.entries(d.porConcepto) :
     Object.keys(d.porConcepto).map(function(k){return [k, d.porConcepto[k]];});
   pares.sort(function(a,b){return b[1]-a[1];});
-  var top10 = pares.slice(0,10).reverse();
+  // top10: índice 0 = mayor, índice 9 = menor
+  // Con indexAxis:'y', Chart.js dibuja índice 0 ARRIBA → necesitamos reverse para que mayor quede abajo
+  var top10sorted = pares.slice(0,10);   // mayor primero
+  var top10 = top10sorted.slice().reverse(); // menor primero → mayor aparece abajo en chart
   var ctx = document.getElementById('ch-top').getContext('2d');
   dashCharts['top'] = new Chart(ctx, {
     type:'bar',
@@ -1784,12 +1902,13 @@ function renderTop(d){
     options:{indexAxis:'y',responsive:true,
     onClick:function(evt,els){
       if(!els||!els.length) return;
-      var cat = top10[top10.length-1-els[0].index][0];
+      // top10[0] = menor (arriba), top10[9] = mayor (abajo) — índice coincide directo
+      var cat = top10[els[0].index][0];
       if(cat) drillCategoria(cat, sbLastData||{qIni:mesVer.ini,qFin:mesVer.fin,porConcepto:{},planes:{}});
     },
     plugins:{legend:{display:false},
       tooltip:{callbacks:{
-        title:function(items){ return top10[top10.length-1-items[0].dataIndex][0]; },
+        title:function(items){ return top10[items[0].dataIndex][0]; },
         label:function(c){ return '  $'+dashFmtDec(c.parsed.x)+' — clic para desglose'; }
       }}},
       scales:{x:{ticks:{callback:function(v){return '$'+dashFmt(v)},font:{size:10}},grid:{color:'#F0EEE8'}},
@@ -1952,6 +2071,7 @@ function undo(){
   var last = _undoStack.pop();
   if(last.tipo === 'fila'){
     S.filas.splice(last.idx, 0, last.item);
+    if(last.txIdx >= 0 && S.txs[last.txIdx]) S.txs[last.txIdx]._excluido = false;
     guardar(); render();
   } else if(last.tipo === 'tx'){
     S.txs.splice(last.idx, 0, last.item);
@@ -1960,6 +2080,254 @@ function undo(){
   if(!_undoStack.length) document.getElementById('btn-undo').style.display='none';
 }
 document.getElementById('btn-undo').addEventListener('click', undo);
+
+
+// ─── DASHBOARD POR CATEGORÍA ──────────────────────────────────────────────────
+var CATS_ORDER = [
+  'Pagos / Abonos','Seguros','Deuda / Comisiones Tarjeta',
+  'Educación / Cursos','Apple','Amazon','Mercado Libre',
+  'Software / Suscripciones','Telefonía Celular','Telefonía / Internet',
+  'Servicios del Hogar','Transporte / Gasolina','Autolavado',
+  'Viajes / Vuelos','Tintorería / Lavandería',
+  'Deporte / Gym','Despensa / Supermercado','Restaurantes / Comida',
+  'Salud / Estética','Ropa / Moda','Compras en línea',
+  'Servicios Profesionales','Otro egreso'
+];
+
+var CATS_COLORS = {
+  'Pagos / Abonos':'#1D9E75','Seguros':'#3B82F6',
+  'Deuda / Comisiones Tarjeta':'#EF4444','Educación / Cursos':'#8B5CF6',
+  'Apple':'#6B7280','Amazon':'#F59E0B','Mercado Libre':'#10B981',
+  'Software / Suscripciones':'#6366F1','Telefonía Celular':'#EC4899',
+  'Telefonía / Internet':'#14B8A6','Transporte / Gasolina':'#F97316',
+  'Viajes / Vuelos':'#0EA5E9','Servicios del Hogar':'#84CC16',
+  'Deporte / Gym':'#22C55E','Despensa / Supermercado':'#A78BFA',
+  'Restaurantes / Comida':'#FB923C','Salud / Estética':'#F43F5E',
+  'Ropa / Moda':'#E879F9','Compras en línea':'#38BDF8',
+  'Servicios Profesionales':'#94A3B8','Otro egreso':'#D1D5DB'
+};
+
+function catsGetData(){
+  var anio = parseInt(document.getElementById('cats-anio').value) || S.anio;
+  var qIni = mesVer.ini, qFin = mesVer.fin;
+
+  // porCat[cat][mes 0-11] = total
+  var porCat = {};
+  CATS_ORDER.forEach(function(cat){ porCat[cat] = Array(12).fill(0); });
+
+  S.txs.forEach(function(t){
+    if(t._excluido) return;
+    if(t.tipo !== 'Egreso') return;
+    if(anioDeAmex(t.fecha) !== anio) return;
+    var quin = quinDeAmex(t.fecha);
+    if(quin < qIni || quin > qFin) return;
+    var mes = Math.floor(quin/2);
+    var cat = (t.cat||'Otro egreso').trim();
+    if(!porCat[cat]) porCat[cat] = Array(12).fill(0);
+    porCat[cat][mes] += parseFloat(t.importe)||0;
+  });
+
+  // Total por categoría en el rango
+  var totales = {};
+  var grandTotal = 0;
+  CATS_ORDER.forEach(function(cat){
+    var sum = 0;
+    var mIni = Math.floor(qIni/2), mFin = Math.floor(qFin/2);
+    for(var m=mIni; m<=mFin; m++) sum += porCat[cat][m]||0;
+    totales[cat] = sum;
+    grandTotal += sum;
+  });
+
+  return { porCat:porCat, totales:totales, grandTotal:grandTotal, anio:anio, qIni:qIni, qFin:qFin };
+}
+
+function renderCatsKPIs(d){
+  var html = '';
+  var sorted = CATS_ORDER.slice().sort(function(a,b){ return d.totales[b]-d.totales[a]; });
+  sorted.forEach(function(cat){
+    var total = d.totales[cat];
+    if(!total) return;
+    var pct = d.grandTotal>0 ? Math.round(total/d.grandTotal*100) : 0;
+    var col = CATS_COLORS[cat] || '#6B7280';
+    var catEnc = cat.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    html += '<div class="kpi-card" style="cursor:pointer;border-left:4px solid '+col+';transition:all .15s" data-cat="'+catEnc+'">'
+      +'<span class="kpi-label" style="color:'+col+'">'+cat+'</span>'
+      +'<span class="kpi-val" style="font-size:16px;color:#2C2C2A">$'+dashFmt(total)+'</span>'
+      +'<span class="kpi-sub">'+pct+'% del total <span style="color:'+col+';font-weight:700">&rarr; clic para detalle</span></span>'
+      +'</div>';
+  });
+  var kpisEl = document.getElementById('cats-kpis');
+  kpisEl.innerHTML = html || '<div style="color:#888780;font-size:12px;padding:20px">Sin datos. Usa ⚙️ Reclasificar todo en Detalle movimientos.</div>';
+  kpisEl.querySelectorAll('[data-cat]').forEach(function(el){
+    el.addEventListener('mouseenter', function(){ this.style.boxShadow='0 2px 12px rgba(0,0,0,.12)'; this.style.transform='translateY(-1px)'; });
+    el.addEventListener('mouseleave', function(){ this.style.boxShadow=''; this.style.transform=''; });
+    el.addEventListener('click', function(){
+      var cat = this.getAttribute('data-cat');
+      if(cat && catsLastData) window.drillCatsSidebar(cat, catsLastData);
+    });
+  });
+}
+
+
+var catsChart = null;
+function renderCatsBarras(d){
+  if(catsChart){ catsChart.destroy(); catsChart = null; }
+  var sorted = CATS_ORDER.slice().sort(function(a,b){ return d.totales[b]-d.totales[a]; });
+  var labels=[], datos=[], colors=[];
+  sorted.forEach(function(cat){
+    if(!d.totales[cat]) return;
+    labels.push(cat.length>22?cat.slice(0,22)+'…':cat);
+    datos.push(d.totales[cat]);
+    colors.push(CATS_COLORS[cat]||'#6B7280');
+  });
+  var ctx = document.getElementById('ch-cats-barras').getContext('2d');
+  catsChart = new Chart(ctx, {
+    type:'bar',
+    data:{ labels:labels, datasets:[{data:datos, backgroundColor:colors, borderRadius:4}] },
+    options:{ indexAxis:'y', responsive:true,
+      plugins:{ legend:{display:false}, datalabels:{display:false},
+        tooltip:{callbacks:{
+          title:function(items){ return sorted.filter(function(c){ return d.totales[c]>0; })[items[0].dataIndex]; },
+          label:function(c){ return '  $'+dashFmtDec(c.parsed.x)+' ('+Math.round(c.parsed.x/d.grandTotal*100)+'%)'; }
+        }}
+      },
+      onClick:function(evt,els){
+        if(!els||!els.length) return;
+        var realCats = sorted.filter(function(c){ return d.totales[c]>0; });
+        var cat = realCats[els[0].index];
+        if(cat) window.drillCatsSidebar(cat, catsLastData);
+      },
+      scales:{
+        x:{ticks:{callback:function(v){return '$'+dashFmt(v);},font:{size:10}},grid:{color:'#F0EEE8'}},
+        y:{ticks:{font:{size:10}},grid:{display:false}}
+      }
+    }
+  });
+}
+
+function renderCatsTabla(d){
+  var MESES_N = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  var mIni = Math.floor(d.qIni/2), mFin = Math.floor(d.qFin/2);
+  var sorted = CATS_ORDER.slice().sort(function(a,b){ return d.totales[b]-d.totales[a]; });
+  var activeCats = sorted.filter(function(cat){ return d.totales[cat]>0; });
+
+  var hdr = '<thead><tr style="background:#2C2C2A;color:#fff">'
+    +'<th style="padding:7px 10px;text-align:left;font-size:10px;white-space:nowrap">Categoría</th>';
+  for(var m=mIni; m<=mFin; m++) hdr += '<th style="padding:7px 8px;text-align:right;font-size:10px">'+MESES_N[m]+'</th>';
+  hdr += '<th style="padding:7px 10px;text-align:right;font-size:10px;background:#1c1c1a">Total</th></tr></thead>';
+
+  var rows = '<tbody>';
+  activeCats.forEach(function(cat){
+    var col = CATS_COLORS[cat]||'#6B7280';
+    var catEnc = cat.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    rows += '<tr style="cursor:pointer" data-cat="'+catEnc+'">'
+      +'<td style="padding:6px 10px;border-bottom:1px solid #E8E6DF;font-weight:600;font-size:11px;border-left:3px solid '+col+'">'+cat+'</td>';
+    var rowTotal = 0;
+    for(var m=mIni; m<=mFin; m++){
+      var v = d.porCat[cat] ? d.porCat[cat][m]||0 : 0;
+      rowTotal += v;
+      rows += '<td style="padding:5px 8px;border-bottom:1px solid #E8E6DF;text-align:right;font-size:11px;color:'+(v>0?'#2C2C2A':'#D1D5DB')+'">'+(v>0?'$'+dashFmtDec(v):'—')+'</td>';
+    }
+    rows += '<td style="padding:5px 10px;border-bottom:1px solid #E8E6DF;text-align:right;font-weight:700;font-size:11px;background:#F9F8F5;color:'+col+'">$'+dashFmtDec(rowTotal)+'</td>';
+    rows += '</tr>';
+  });
+
+  // Total row
+  rows += '<tr style="background:#F5F4F0;font-weight:700"><td style="padding:7px 10px;font-size:11px">TOTAL</td>';
+  for(var m=mIni; m<=mFin; m++){
+    var mTotal = 0;
+    activeCats.forEach(function(cat){ mTotal += (d.porCat[cat]&&d.porCat[cat][m])||0; });
+    rows += '<td style="padding:6px 8px;text-align:right;font-size:11px">$'+dashFmtDec(mTotal)+'</td>';
+  }
+  rows += '<td style="padding:6px 10px;text-align:right;font-size:11px;background:#F0EEE8">$'+dashFmtDec(d.grandTotal)+'</td></tr>';
+  rows += '</tbody>';
+
+  var tablaEl = document.getElementById('cats-tabla');
+  tablaEl.innerHTML = hdr + rows;
+  tablaEl.querySelectorAll('tr[data-cat]').forEach(function(tr){
+    tr.addEventListener('mouseenter', function(){ this.style.background='#F9F8F5'; });
+    tr.addEventListener('mouseleave', function(){ this.style.background=''; });
+    tr.addEventListener('click', function(){
+      var cat = this.getAttribute('data-cat');
+      if(cat && catsLastData) window.drillCatsSidebar(cat, catsLastData);
+    });
+  });
+}
+
+
+// Sidebar drill-down para categoría
+window.drillCatsSidebar = function(cat, d){
+  if(!d) return;
+  var anio = d.anio || S.anio;
+  var movs = S.txs.filter(function(t){
+    if(t._excluido || t.tipo!=='Egreso') return false;
+    if(anioDeAmex(t.fecha)!==anio) return false;
+    var q = quinDeAmex(t.fecha);
+    if(q<d.qIni||q>d.qFin) return false;
+    return (t.cat||'Otro egreso').trim()===cat;
+  });
+  movs.sort(function(a,b){ return fechaOrden(a).localeCompare(fechaOrden(b)); });
+  var total = movs.reduce(function(s,t){ return s+(parseFloat(t.importe)||0); },0);
+  var pct = d.grandTotal>0?Math.round(total/d.grandTotal*100):0;
+  var col = CATS_COLORS[cat]||'#6B7280';
+
+  var summary = '<div style="display:flex;gap:20px;flex-wrap:wrap">'
+    +'<div><div style="font-size:10px;color:#888780">Movimientos</div><div style="font-size:20px;font-weight:700;color:#2C2C2A">'+movs.length+'</div></div>'
+    +'<div><div style="font-size:10px;color:#888780">Total</div><div style="font-size:20px;font-weight:700;color:'+col+'">$'+dashFmtDec(total)+'</div></div>'
+    +'<div><div style="font-size:10px;color:#888780">% del gasto</div><div style="font-size:20px;font-weight:700;color:#3B82F6">'+pct+'%</div></div>'
+    +'</div>';
+
+  var body = '';
+  if(!movs.length){
+    body = '<div style="text-align:center;color:#888780;padding:30px">Sin movimientos en el rango.</div>';
+  } else {
+    body = '<div style="font-size:10px;color:#888780;font-weight:700;display:grid;grid-template-columns:90px 1fr 110px;gap:6px;padding:5px 0;border-bottom:1px solid #E8E6DF">'
+      +'<span>Fecha</span><span>Descripción</span><span style="text-align:right">Importe</span></div>';
+    movs.forEach(function(t){
+      body += '<div class="sb-row">'
+        +'<span class="sb-fecha">'+fmtFecha(t)+'</span>'
+        +'<span class="sb-desc" title="'+esc(t.desc||'')+'">'+esc(t.desc||'')+'</span>'
+        +'<span class="sb-imp gas" style="color:'+col+'">$'+dashFmtDec(t.importe)+'</span>'
+        +'</div>';
+    });
+    body += '<div class="sb-total"><span>Total ('+movs.length+' movs)</span><span style="color:'+col+'">$'+dashFmtDec(total)+'</span></div>';
+  }
+  sbOpen('📂 '+cat, 'Categoría • '+movs.length+' movimientos', summary, body);
+};
+
+var catsLastData = null;
+function renderCatsInterno(){
+  var d = catsLastData = catsGetData();
+  // Update range label
+  var lbl = document.getElementById('cats-rango-lbl');
+  if(lbl){
+    var QLAB = function(q){ var mc=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; return mc[Math.floor(q/2)]+' '+(q%2===0?'1ª':'2ª'); };
+    lbl.textContent = (d.qIni===0&&d.qFin===23)?'Todo el año':'Mostrando: '+QLAB(d.qIni)+' → '+QLAB(d.qFin);
+  }
+  renderCatsKPIs(d);
+  renderCatsBarras(d);
+  renderCatsTabla(d);
+}
+
+function renderCats(){
+  // Poblar selector de año
+  var selAnio = document.getElementById('cats-anio');
+  if(!selAnio.options.length){
+    var anios = [S.anio-1, S.anio, S.anio+1];
+    S.txs.forEach(function(t){ var a=anioDeAmex(t.fecha); if(anios.indexOf(a)<0) anios.push(a); });
+    anios.sort();
+    anios.forEach(function(a){
+      var o = document.createElement('option');
+      o.value=a; o.textContent=a;
+      if(a===S.anio) o.selected=true;
+      selAnio.appendChild(o);
+    });
+  }
+  renderCatsInterno();
+}
+
+document.getElementById('btn-cats-refresh').addEventListener('click', renderCatsInterno);
+document.getElementById('cats-anio').addEventListener('change', renderCatsInterno);
 
 // Exponer funciones de sidebar al scope global (necesario para onclick inline)
 window.sbClose      = sbClose;
