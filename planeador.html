@@ -283,6 +283,7 @@ button.del2:hover{background:#FAECE7;color:#D85A30}
     <button id="btn-mes-todo" type="button" style="background:rgba(255,200,0,.15);border:1px solid rgba(255,200,0,.3);color:#FAC775;border-radius:4px;font-size:10px;padding:3px 7px;cursor:pointer;font-family:Arial">Todo</button>
   </div>
   <button class="nb nb-xl" id="btn-xl" type="button">&#8595; Excel</button>
+  <button class="nb" id="btn-undo" type="button" style="background:#378ADD;color:#fff;border-color:#378ADD;display:none" title="Deshacer última eliminación">&#8617; Deshacer</button>
   <button class="nb nb-cl" id="btn-limpiar" type="button">&#128465; Limpiar todo</button>
 </nav>
 
@@ -335,7 +336,7 @@ button.del2:hover{background:#FAECE7;color:#D85A30}
       <option>Transferencia</option><option>Débito</option><option>Otro</option>
     </select>
     <input id="nb-con" type="text" placeholder="Concepto..." style="width:170px">
-    <input id="nb-val" type="number" placeholder="Monto mensual" min="0" step="0.01" style="width:125px">
+    <input id="nb-val" type="number" placeholder="Monto mensual" min="0" step="0.01" style="width:125px" title="Se aplica a ambas quincenas del mes">
     <select id="nb-obs">
       <option value="">— obs —</option>
       <option>Recurrente</option><option>Variable</option><option>Eventual</option>
@@ -350,7 +351,7 @@ button.del2:hover{background:#FAECE7;color:#D85A30}
   <div class="card">
     <div class="ctit">1 · CARGAR ESTADO DE CUENTA (.xlsx)</div>
     <div class="dz" id="dz">
-      <input type="file" id="f-amex" accept=".xlsx">
+      <input type="file" id="f-amex" accept=".xlsx" multiple>
       <div class="dz-ic">&#128196;</div>
       <div class="dz-tx">Arrastra aquí o haz clic para seleccionar</div>
       <div class="dz-nm" id="dz-nm">Amex Platinum · actividad-NN.xlsx</div>
@@ -612,6 +613,8 @@ let S = (function(){
 })();
 
 let pending = [];
+var _undoStack = [];  // stack of {tipo, fila/tx, idx}
+var MAX_UNDO = 10;
 
 function guardar(){
   try{
@@ -846,13 +849,26 @@ function renderBody(){
   var h = '';
   // Solo mostrar separador de Ingresos si hay filas
   if(ings.length){
-    h += '<tr class="sep si"><td colspan="'+(total+12-vis+3)+'">&#9650; Ingresos</td></tr>';
-    h += ings.map(filaHTML).join('');
+    // Solo mostrar si al menos una fila tiene valor en el rango visible
+    var ingsConVal = ings.filter(function(f){
+      for(var j=mesVer.ini;j<=mesVer.fin;j++) if(f.montos[j]!=null) return true;
+      return !f.fecha; // filas sin fecha (base del planeador) siempre visibles
+    });
+    if(ingsConVal.length){
+      h += '<tr class="sep si"><td colspan="'+(total+12-vis+3)+'">&#9650; Ingresos</td></tr>';
+      h += ingsConVal.map(filaHTML).join('');
+    }
   }
   // Solo mostrar separador de Gastos si hay filas
   if(gas.length){
-    h += '<tr class="sep sg"><td colspan="'+(total+12-vis+3)+'">&#9660; Gastos</td></tr>';
-    h += gas.map(filaHTML).join('');
+    var gasConVal = gas.filter(function(f){
+      for(var j=mesVer.ini;j<=mesVer.fin;j++) if(f.montos[j]!=null) return true;
+      return !f.fecha;
+    });
+    if(gasConVal.length){
+      h += '<tr class="sep sg"><td colspan="'+(total+12-vis+3)+'">&#9660; Gastos</td></tr>';
+      h += gasConVal.map(filaHTML).join('');
+    }
   }
   // Si no hay nada visible mostrar mensaje
   if(!ings.length && !gas.length){
@@ -911,8 +927,12 @@ document.getElementById('tbody').addEventListener('click', function(e){
   var btn = e.target.closest('[data-del]');
   if(!btn) return;
   var id = parseFloat(btn.getAttribute('data-del'));
+  var filaDel = S.filas.filter(function(x){ return x.id===id; })[0];
+  var idxDel  = S.filas.findIndex(function(x){ return x.id===id; });
+  if(filaDel){ _undoStack.push({tipo:'fila',item:filaDel,idx:idxDel}); if(_undoStack.length>MAX_UNDO) _undoStack.shift(); }
   S.filas = S.filas.filter(function(x){ return x.id!==id; });
   guardar(); render();
+  document.getElementById('btn-undo').style.display='';
 });
 
 // ─── AGREGAR FILA ─────────────────────────────────────────────────────────────
@@ -929,7 +949,7 @@ document.getElementById('btn-agregar').addEventListener('click', function(){
   var val  = parseMonto(document.getElementById('nb-val').value);
   var obs  = document.getElementById('nb-obs').value;
   if(!con){ document.getElementById('nb-con').focus(); return; }
-  S.filas.push({id:uid(),tipo:tipo,metodo:met,concepto:con,obs:obs,montos:Array(12).fill(val),inicio:(val!=null?0:null)});
+  S.filas.push({id:uid(),tipo:tipo,metodo:met,concepto:con,obs:obs,montos:Array(24).fill(val),inicio:(val!=null?0:null)});
   document.getElementById('nb-con').value='';
   document.getElementById('nb-val').value='';
   guardar(); render();
@@ -1073,12 +1093,84 @@ function loadFile(file){
   reader.readAsArrayBuffer(file);
 }
 
-document.getElementById('f-amex').addEventListener('change', function(){ loadFile(this.files[0]); });
+function loadFileMulti(file, callback){
+  var prog = document.getElementById('prog');
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      var wb   = XLSX.read(e.target.result,{type:'array',cellDates:true});
+      var ws   = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws,{header:1,raw:false});
+      var hi   = -1;
+      for(var i=0;i<Math.min(rows.length,20);i++){
+        if(rows[i][0]==='Fecha'&&rows[i][1]==='Fecha de Compra'){ hi=i; break; }
+      }
+      if(hi<0){ if(callback) callback(); return; }
+      var per = (rows[0]&&rows[0][1])||'';
+      var existe = {};
+      S.txs.forEach(function(t){ existe[t.fecha+'|'+t.desc.substring(0,30)+'|'+parseFloat(t.importe).toFixed(2)]=1; });
+      pending.forEach(function(t){ existe[t.fecha+'|'+t.desc.substring(0,30)+'|'+parseFloat(t.importe).toFixed(2)]=1; });
+      var added=0, dups=0;
+      for(var i=hi+1;i<rows.length;i++){
+        var r=rows[i];
+        if(!r[0]||!r[0].toString().trim()) continue;
+        var fecha=r[0].toString().trim();
+        var descLargo=(r[9]||r[2]||'').toString().trim();
+        var descCorto=(r[2]||'').toString().trim();
+        var ref=(r[8]||'').toString().trim();
+        var desc=descLargo||descCorto;
+        var impOrig=parseFloat(r[5])||0;
+        var importe=Math.abs(impOrig);
+        if(importe===0) continue;
+        var tipo=impOrig<0?'Ingreso':'Egreso';
+        var cat=clasificar(desc,impOrig);
+        var key=fecha+'|'+descCorto.substring(0,30)+'|'+importe.toFixed(2);
+        if(existe[key]){ dups++; continue; }
+        existe[key]=1;
+        pending.push({id:uid(),fecha:fecha,desc:desc,ref:ref,tipo:tipo,cat:cat,importe:importe,origen:'amex',periodo:per,checked:true});
+        added++;
+      }
+      document.getElementById('dz').classList.add('ok');
+    }catch(err){ console.error(err); }
+    if(callback) callback();
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+document.getElementById('f-amex').addEventListener('change', function(){
+  var files = Array.from(this.files);
+  if(!files.length) return;
+  if(files.length === 1){ loadFile(files[0]); return; }
+  // Múltiples archivos: procesar todos secuencialmente
+  var prog = document.getElementById('prog');
+  prog.className='prog'; prog.textContent='Procesando '+files.length+' archivos...';
+  var idx=0;
+  function processNext(){
+    if(idx>=files.length){
+      prog.className='prog ok';
+      prog.textContent='✓ '+files.length+' archivos procesados. '+pending.length+' movimientos para importar.';
+      renderPreview();
+      return;
+    }
+    loadFileMulti(files[idx++], processNext);
+  }
+  processNext();
+});
 
 var dz = document.getElementById('dz');
 dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.classList.add('ok'); });
 dz.addEventListener('dragleave', function(){ dz.classList.remove('ok'); });
-dz.addEventListener('drop', function(e){ e.preventDefault(); loadFile(e.dataTransfer.files[0]); });
+dz.addEventListener('drop', function(e){
+  e.preventDefault(); dz.classList.remove('drag');
+  var files = Array.from(e.dataTransfer.files).filter(function(f){ return f.name.match(/\.xlsx$/i); });
+  if(!files.length) return;
+  if(files.length===1){ loadFile(files[0]); return; }
+  var prog = document.getElementById('prog');
+  prog.className='prog'; prog.textContent='Procesando '+files.length+' archivos...';
+  var fi=0;
+  function next(){ if(fi>=files.length){ prog.className='prog ok'; prog.textContent='✓ '+files.length+' archivos. '+pending.length+' movimientos.'; renderPreview(); return; } loadFileMulti(files[fi++], next); }
+  next();
+});
 
 // ─── PREVIEW ──────────────────────────────────────────────────────────────────
 function renderPreview(){
@@ -1604,25 +1696,31 @@ function renderDona(d){
   var datos  = top.map(function(p){return p[1];});
   var total  = datos.reduce(function(a,b){return a+b;},0);
   var ctx = document.getElementById('ch-dona').getContext('2d');
+  var useDL = typeof ChartDataLabels !== 'undefined';
+  if(useDL) Chart.register(ChartDataLabels);
   dashCharts['dona'] = new Chart(ctx, {
     type:'doughnut',
-    data:{labels:labels,datasets:[{data:datos,backgroundColor:COLORES_BARRAS,borderWidth:2,borderColor:'#fff'}]},
-    options:{responsive:true,
+    data:{labels:labels,datasets:[{
+      data:datos,
+      backgroundColor:COLORES_BARRAS,
+      borderWidth:3,
+      borderColor:'#fff',
+      hoverOffset:8
+    }]},
+    options:{responsive:true,cutout:'55%',
     onClick:function(evt,els){
       if(!els||!els.length) return;
       var cat = labels[els[0].index];
       if(cat && cat!=='Otros') drillCategoria(cat, sbLastData||{qIni:mesVer.ini,qFin:mesVer.fin,porConcepto:d.porConcepto,planes:d.planes||{}});
     },
     plugins:{
-      legend:{position:'right',labels:{font:{size:10},boxWidth:12,padding:8,
+      legend:{position:'right',labels:{font:{size:10},boxWidth:12,padding:6,
         generateLabels:function(chart){
           var ds = chart.data.datasets[0];
           return chart.data.labels.map(function(lbl,i){
             var val = ds.data[i]||0;
             var pct = total>0?Math.round(val/total*100):0;
-            return {text:lbl+' '+pct+'%',fillStyle:ds.backgroundColor[i],hidden:false,index:i,
-              onClick:function(){ if(lbl!=='Otros') drillCategoria(lbl, sbLastData||{qIni:mesVer.ini,qFin:mesVer.fin,porConcepto:d.porConcepto,planes:{}}); }
-            };
+            return {text:lbl+' ('+pct+'%)',fillStyle:ds.backgroundColor[i],hidden:false,index:i};
           });
         }
       }},
@@ -1631,7 +1729,17 @@ function renderDona(d){
           var pct = total>0?Math.round(c.parsed/total*100):0;
           return c.label+': $'+dashFmtDec(c.parsed)+' ('+pct+'%) — clic para desglose';
         }
-      }}
+      }},
+      datalabels: useDL ? {
+        color:'#fff',
+        font:{weight:'bold',size:11},
+        formatter:function(val,ctx){
+          var pct = total>0?Math.round(val/total*100):0;
+          return pct>=5 ? pct+'%' : '';
+        },
+        anchor:'center',align:'center',
+        textShadowColor:'rgba(0,0,0,.4)',textShadowBlur:4
+      } : false
     }}
   });
 }
@@ -1784,7 +1892,14 @@ function renderDash(){
   if(typeof Chart === 'undefined'){
     var script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
-    script.onload = function(){ renderDashInterno(); };
+    script.onload = function(){
+      // Load datalabels plugin for percentage labels inside dona
+      var sl = document.createElement('script');
+      sl.src = 'https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js';
+      sl.onload = function(){ renderDashInterno(); };
+      sl.onerror = function(){ renderDashInterno(); }; // fallback if plugin fails
+      document.head.appendChild(sl);
+    };
     document.head.appendChild(script);
   } else {
     renderDashInterno();
@@ -1820,6 +1935,21 @@ function drillPlanByKey(pk){
   }
 }
 window.drillPlanByKey = drillPlanByKey;
+
+// ─── UNDO ────────────────────────────────────────────────────────────────────
+function undo(){
+  if(!_undoStack.length) return;
+  var last = _undoStack.pop();
+  if(last.tipo === 'fila'){
+    S.filas.splice(last.idx, 0, last.item);
+    guardar(); render();
+  } else if(last.tipo === 'tx'){
+    S.txs.splice(last.idx, 0, last.item);
+    guardar(); renderDetalle();
+  }
+  if(!_undoStack.length) document.getElementById('btn-undo').style.display='none';
+}
+document.getElementById('btn-undo').addEventListener('click', undo);
 
 // Exponer funciones de sidebar al scope global (necesario para onclick inline)
 window.sbClose      = sbClose;
