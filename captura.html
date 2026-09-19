@@ -80,6 +80,11 @@ input:focus{border-color:#F5BD4F}
 .item .mt.in{color:#107C41}
 .item .st{font-size:11px;width:16px;text-align:center}
 .item .del{border:0;background:transparent;color:#C9C1B6;font-size:17px;padding:2px 4px}
+.item .edt{border:1px solid #E0D9CE;background:#fff;color:#8A8177;font-size:14px;padding:5px 8px;border-radius:9px;line-height:1}
+.item.editando{background:#FEF9EC;margin:0 -6px;padding-left:6px;padding-right:6px;border-radius:10px}
+.buscar{display:flex;gap:7px;margin-bottom:10px}
+.buscar input{flex:1;padding:10px 12px;font-size:15px}
+.vermas{width:100%;margin-top:10px;border:1px dashed #D6CFC4;background:#FCFBF9;color:#8A8177;border-radius:11px;padding:11px;font-size:13.5px}
 .vacio{color:#8A8177;font-size:13.5px;text-align:center;padding:14px 0}
 .ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;align-items:flex-end}
 .ov.on{display:flex}
@@ -182,7 +187,7 @@ input:focus{border-color:#F5BD4F}
 
   <section id="v-capturar" class="vista on">
   <div id="editbar" class="editbar">
-    <span>Editando movimiento</span>
+    <span id="editbar-txt">Editando movimiento</span>
     <button id="btn-cancel-edit">Cancelar</button>
   </div>
 
@@ -210,7 +215,7 @@ input:focus{border-color:#F5BD4F}
       </div>
     </div>
 
-    <label class="lbl" for="nota">Nota (opcional)</label>
+    <label class="lbl" for="nota">Concepto <span style="text-transform:none;letter-spacing:0;font-weight:400;color:#B5ADA2">— así lo verás en el Planeador</span></label>
     <input id="nota" type="text" placeholder="Ej. comida con cliente" autocomplete="off">
 
     <button id="btn-guardar" class="save">Guardar gasto</button>
@@ -220,10 +225,14 @@ input:focus{border-color:#F5BD4F}
 
   <section class="card">
     <div class="hd">
-      <b>Últimos movimientos</b>
+      <b id="lista-tit">Últimos movimientos</b>
       <button id="btn-sync" class="mini">↻ Sincronizar</button>
     </div>
+    <div class="buscar">
+      <input id="q" type="text" placeholder="Buscar por concepto o categoría…" autocomplete="off">
+    </div>
     <div id="lista"></div>
+    <button id="btn-vermas" class="vermas" style="display:none"></button>
   </section>
 
   </section>
@@ -257,7 +266,7 @@ input:focus{border-color:#F5BD4F}
 (function(){
 'use strict';
 
-var VER = 'captura v4';
+var VER = 'captura v5';
 var KEY = 'CAPTURA_V1';
 
 var CATS_EGRESO = [
@@ -392,27 +401,58 @@ function renderTotales(){
 }
 
 function renderLista(){
-  var arr = vivos().slice().sort(function(a,b){
+  var q = _filtro.trim().toLowerCase();
+  var todos = vivos().slice().sort(function(a,b){
     if(a.fecha===b.fecha) return (b.ts||0)-(a.ts||0);
     return a.fecha<b.fecha ? 1 : -1;
-  }).slice(0,12);
+  });
 
-  if(!arr.length){ $('lista').innerHTML = '<div class="vacio">Aún no hay movimientos capturados.</div>'; return; }
+  var arr = q ? todos.filter(function(i){
+    return (i.cat||'').toLowerCase().indexOf(q) >= 0
+        || (i.nota||'').toLowerCase().indexOf(q) >= 0
+        || (i.metodo||'').toLowerCase().indexOf(q) >= 0
+        || String(i.monto).indexOf(q) >= 0;
+  }) : todos;
+
+  var total = arr.length;
+  var corte = (_verTodos || q) ? total : Math.min(12, total);
+  var vista = arr.slice(0, corte);
+
+  $('lista-tit').textContent = q
+    ? (total + ' resultado' + (total===1?'':'s'))
+    : 'Últimos movimientos' + (todos.length ? ' · ' + todos.length : '');
+
+  if(!vista.length){
+    $('lista').innerHTML = '<div class="vacio">' +
+      (q ? 'Nada coincide con «' + esc(_filtro) + '».' : 'Aún no hay movimientos capturados.') + '</div>';
+    $('btn-vermas').style.display = 'none';
+    return;
+  }
 
   var h = '';
-  arr.forEach(function(i){
+  vista.forEach(function(i){
     var st = i.estado==='ok' ? '<span class="st" title="En la hoja">✓</span>' : '<span class="st" title="Pendiente">⏳</span>';
-    h += '<div class="item" data-id="'+esc(i.id)+'">' +
+    var sub = esc(i.fecha) + ' · ' + esc(i.metodo) + (i.nota ? ' · ' + esc(i.nota) : '');
+    h += '<div class="item' + (editandoId===i.id ? ' editando' : '') + '" data-id="'+esc(i.id)+'">' +
            st +
            '<div class="txt" data-edit="'+esc(i.id)+'">' +
              '<div class="c1">'+esc(i.cat||'Sin categoría')+'</div>' +
-             '<div class="c2">'+esc(i.fecha)+' · '+esc(i.metodo)+(i.nota?' · '+esc(i.nota):'')+'</div>' +
+             '<div class="c2">'+sub+'</div>' +
            '</div>' +
            '<div class="mt'+(i.tipo==='Ingreso'?' in':'')+'">'+(i.tipo==='Ingreso'?'+':'-')+mxn(i.monto)+'</div>' +
-           '<button class="del" data-del="'+esc(i.id)+'" aria-label="Eliminar">✕</button>' +
+           '<button class="edt" data-edit="'+esc(i.id)+'" aria-label="Corregir">&#9998;</button>' +
+           '<button class="del" data-del="'+esc(i.id)+'" aria-label="Eliminar">&#10005;</button>' +
          '</div>';
   });
   $('lista').innerHTML = h;
+
+  var b = $('btn-vermas');
+  if(!q && total > 12){
+    b.style.display = 'block';
+    b.textContent = _verTodos ? '▲ Mostrar solo los últimos 12' : '▼ Ver los ' + total + ' movimientos';
+  } else {
+    b.style.display = 'none';
+  }
 }
 
 function renderEstado(){
@@ -480,6 +520,7 @@ function limpiarForm(){
   $('fecha').value = hoyISO();
   editandoId = null;
   renderChips();
+  renderLista();
 }
 
 function onGuardar(){
@@ -517,7 +558,10 @@ function editar(id){
   $('monto').value = it.monto;
   $('nota').value = it.nota || '';
   $('fecha').value = it.fecha;
+  var et = $('editbar-txt');
+  if(et) et.textContent = 'Corrigiendo: ' + (it.nota || it.cat || 'movimiento') + ' · ' + mxn(it.monto);
   renderChips();
+  renderLista();
   window.scrollTo({ top:0, behavior:'smooth' });
 }
 
@@ -578,6 +622,8 @@ $('btn-guardar').addEventListener('click', onGuardar);
 $('btn-cancel-edit').addEventListener('click', function(){ limpiarForm(); });
 $('btn-sync').addEventListener('click', function(){ sync(true); });
 $('btn-pl-ref').addEventListener('click', function(){ planTraer(true); });
+$('q').addEventListener('input', function(){ _filtro = this.value; renderLista(); });
+$('btn-vermas').addEventListener('click', function(){ _verTodos = !_verTodos; renderLista(); });
 
 $('btn-cfg').addEventListener('click', function(){
   $('cfg-url').value = S.cfg.url;
@@ -648,6 +694,8 @@ if('serviceWorker' in navigator && window.isSecureContext){
 
 /* ---------- vista Planeador ---------- */
 var _qVista = null;     // índice 0-23 que se está viendo; null = la de hoy
+var _verTodos = false;  // la lista muestra 12 o todo
+var _filtro = '';       // texto del buscador
 
 function qHoy(){
   var d = new Date();
