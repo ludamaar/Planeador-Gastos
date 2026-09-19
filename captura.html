@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Captura">
 <meta name="theme-color" content="#3F2A14">
 <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAADbElEQVR42u3dwU0DMRRFUWJRQqqgBRbs6YVq6IUOqAtWWREhFEax/d65eyT8/50338lkfHp5On89ACEMJQChAUIDhAYIDUIDhAYIDRAaIDQIDRAaIDRAaIDQIDRAaIDQAKEBQoPQAKEBQgOEBgiNbB6V4Dg+3p9v/tvXt08FPICTV4HdV1yiE7pKYIITOl5ichM6VmJyEzpaZGITOk5ichcL3SBys9iDzNYtoTVUWhOayMQ2cpBZfQhN5t46RY0cRDaCDDIjqX5DM5BUx6EJSKrnUHwk1XXLTSGRbRZjEprM6v0bflM4IeFclEaO7UT4y606bT1GjmKZd5tPd6n/UMy5SUbqMqEbbsukLhHa5klfYmfo9E2TX22HCy2dpXSM0GQmdYzQZCa1GRpYUWjpLKUlNLCi0NJZSscITWZSGzmAK0x/fHT2VZ34DV1zTWsf8E/+qvmytsZRbpDZOgm98a2xrckz1jvzzjA017oldMDGBZn9rUno9ueNW9bvc2gQ2riBVfssoSGhAUJPHjfax5yWuktoSGgpZd2E1lzrTRN6leK2NLmx3rWPj16K7HnoLOpfeH5U84+4MHzhZIYGCA1CA4Q2H+Le/ZfQkNAAoQFCA4QGoQFCA4QGCA0QGoQGCA0QGiA0sIzQ7W//bOde/ZfQkNAAoYE7UP8ag5Vm+6P+F+/lIHLk2pxTWCKRcwpz/4+6Gdo5hRJac62b0ECF0LPSwjmFHXWX0JDQAKHd/o05Ehog9FWcU/hMaGMHduuvcwqtW0LvfBU7pzD77lu5KXROYS7OKXROYRSnl6fzlwascZtVByMHsJ7QPsLLYIU+DsVAUv+MHDBySGms2jcJDQktpbFqv4YiIalPQ7GQ1B8z9EH891u+9ue1K4SW0voSl9A7SX1ryu6Uzqv3YyjiXKnJXDpDJ0pN5uNZ4vHR5M3TNRES1rAq9S88dwFmsd3Hdj75UO+okUP6ETkqoaW1usYKTWr1jBOa1OoYJzSp1S9iU2izSOTYhJbW6hQrNKl76xM5chhBei/0CqGJ3XPHcvCmdUtoaU1kQpObxIQmNpEJXSM3iQm9vdwkJvTWghOY0FuKTlxCAz/wKjAQGiA0QGiA0CA0QGiA0AChAUKD0AChAUIDhAYIDUIDhAYIDRAaIDQIDRAaIDRAaOAn37+vf4Lk5tv3AAAAAElFTkSuQmCC">
+<link rel="manifest" href="manifest.webmanifest">
 <title>Captura de Gastos</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -96,6 +97,33 @@ input:focus{border-color:#F5BD4F}
 }
 .toast.on{transform:translateX(-50%) translateY(0)}
 .ver{text-align:center;font-size:11px;color:#B5ADA2;padding:2px 0 10px}
+/* pestañas */
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#2A1B0D;padding:5px;border-radius:12px;margin:0 0 12px}
+.tabs button{border:0;background:transparent;color:#C9B492;padding:10px;border-radius:9px;font-size:14.5px;font-weight:600}
+.tabs button.on{background:#F5BD4F;color:#3F2A14}
+.vista{display:none}
+.vista.on{display:block}
+/* tarjetas del planeador */
+.qhd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.qhd .qt{font-size:19px;font-weight:700}
+.qnav{display:flex;gap:6px}
+.qnav button{border:1px solid #E0D9CE;background:#fff;border-radius:9px;width:34px;height:34px;font-size:15px;color:#4A443C}
+.big{background:#fff;border:1px solid #E7E2DA;border-radius:16px;padding:16px;margin-bottom:12px;text-align:center}
+.big .et{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:#8A8177;font-weight:700}
+.big .nm{font-size:34px;font-weight:700;margin-top:4px;letter-spacing:-.5px}
+.big .sub{font-size:12px;color:#8A8177;margin-top:5px}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.dos div{background:#fff;border:1px solid #E7E2DA;border-radius:14px;padding:11px;text-align:center}
+.dos span{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:#8A8177;font-weight:700}
+.dos b{display:block;font-size:17px;margin-top:3px}
+.barra{height:8px;border-radius:999px;background:#EDE8E0;overflow:hidden;margin-top:9px}
+.barra i{display:block;height:100%;border-radius:999px;background:#DC2626;transition:width .3s}
+.pl{display:flex;align-items:baseline;gap:9px;padding:9px 0;border-top:1px solid #F1EDE6;font-size:14px}
+.pl:first-child{border-top:0}
+.pl .c{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl .m2{font-size:10.5px;color:#B5ADA2}
+.pl .v{font-weight:700;white-space:nowrap}
+.sello{font-size:11px;color:#B5ADA2;text-align:center;padding:2px 0 6px}
 </style>
 </head>
 <body>
@@ -109,6 +137,50 @@ input:focus{border-color:#F5BD4F}
 </header>
 
 <main>
+  <div class="tabs">
+    <button class="tab-btn on" data-vista="capturar">Capturar</button>
+    <button class="tab-btn" data-vista="planeador">Planeador</button>
+  </div>
+
+  <section id="v-planeador" class="vista">
+    <div class="qhd">
+      <div class="qt" id="pl-titulo">—</div>
+      <div class="qnav">
+        <button type="button" data-q="-1" aria-label="Quincena anterior">‹</button>
+        <button type="button" data-q="0" aria-label="Quincena actual">•</button>
+        <button type="button" data-q="1" aria-label="Quincena siguiente">›</button>
+      </div>
+    </div>
+
+    <div class="big">
+      <div class="et">Remanente de la quincena</div>
+      <div class="nm" id="pl-rem">—</div>
+      <div class="sub" id="pl-sub">Sin datos todavía</div>
+      <div class="barra"><i id="pl-barra" style="width:0%"></i></div>
+    </div>
+
+    <div class="dos">
+      <div><span>Ingresos</span><b id="pl-ing" style="color:#107C41">—</b></div>
+      <div><span>Gastos plan.</span><b id="pl-gas" style="color:#DC2626">—</b></div>
+    </div>
+
+    <div class="dos">
+      <div><span>Capturado</span><b id="pl-cap" style="color:#DC2626">—</b></div>
+      <div><span>Mes completo</span><b id="pl-mes" style="color:#3F2A14">—</b></div>
+    </div>
+
+    <section class="card">
+      <div class="hd">
+        <b id="pl-hd">Movimientos de la quincena</b>
+        <button id="btn-pl-ref" class="mini">↻ Actualizar</button>
+      </div>
+      <div id="pl-lista"></div>
+    </section>
+
+    <div class="sello" id="pl-sello"></div>
+  </section>
+
+  <section id="v-capturar" class="vista on">
   <div id="editbar" class="editbar">
     <span>Editando movimiento</span>
     <button id="btn-cancel-edit">Cancelar</button>
@@ -154,6 +226,8 @@ input:focus{border-color:#F5BD4F}
     <div id="lista"></div>
   </section>
 
+  </section>
+
   <div class="ver" id="ver"></div>
 </main>
 
@@ -183,7 +257,7 @@ input:focus{border-color:#F5BD4F}
 (function(){
 'use strict';
 
-var VER = 'captura v2';
+var VER = 'captura v4';
 var KEY = 'CAPTURA_V1';
 
 var CATS_EGRESO = [
@@ -201,7 +275,7 @@ var form = { tipo:'Egreso', cat:S.last.cat || '', metodo:S.last.metodo || 'AMEX 
 
 /* ---------- almacenamiento ---------- */
 function base(){
-  return { cfg:{url:'',token:''}, items:[], catsExtra:[], uso:{}, last:{cat:'',metodo:'AMEX PLATINUM'} };
+  return { cfg:{url:'',token:''}, items:[], catsExtra:[], uso:{}, plan:null, last:{cat:'',metodo:'AMEX PLATINUM'} };
 }
 function cargar(){
   var d = base();
@@ -212,7 +286,8 @@ function cargar(){
     d.cfg = { url:(o.cfg&&o.cfg.url)||'', token:(o.cfg&&o.cfg.token)||'' };
     d.items = Array.isArray(o.items)? o.items : [];
     d.catsExtra = Array.isArray(o.catsExtra)? o.catsExtra : [];
-    d.uso = (o.uso && typeof o.uso==='object') ? o.uso : {};
+    d.uso  = (o.uso && typeof o.uso==='object') ? o.uso : {};
+    d.plan = (o.plan && typeof o.plan==='object') ? o.plan : null;
     d.last = { cat:(o.last&&o.last.cat)||'', metodo:(o.last&&o.last.metodo)||'AMEX PLATINUM' };
     return d;
   }catch(e){ return d; }
@@ -344,6 +419,10 @@ function renderEstado(){
   var c = $('chip');
   var pend = S.items.filter(function(i){ return i.estado!=='ok'; }).length;
   c.className = 'chip-est';
+  if(!navigator.onLine){
+    c.textContent = pend ? ('Sin red · ' + pend) : 'Sin red';
+    c.classList.add('pend'); return;
+  }
   if(!S.cfg.url){ c.textContent = 'Sin conectar'; c.classList.add('err'); return; }
   if(pend){ c.textContent = pend + ' pendiente' + (pend>1?'s':''); c.classList.add('pend'); return; }
   c.textContent = 'Al día'; c.classList.add('ok');
@@ -427,7 +506,7 @@ function onGuardar(){
 
   S.uso[form.cat] = (S.uso[form.cat]||0) + 1;
   S.last = { cat:form.cat, metodo:form.metodo };
-  guardar(); limpiarForm(); render(); sync(false);
+  guardar(); limpiarForm(); render(); renderPlan(); sync(false);
 }
 
 function editar(id){
@@ -454,7 +533,7 @@ function eliminar(id){
 
 /* ---------- eventos ---------- */
 document.addEventListener('click', function(ev){
-  var t = ev.target.closest('[data-cat],[data-met],[data-addcat],[data-tipo],[data-dia],[data-edit],[data-del]');
+  var t = ev.target.closest('[data-cat],[data-met],[data-addcat],[data-tipo],[data-dia],[data-edit],[data-del],[data-vista],[data-q]');
   if(!t) return;
 
   if(t.hasAttribute('data-cat')){ form.cat = t.getAttribute('data-cat'); renderChips(); return; }
@@ -479,6 +558,18 @@ document.addEventListener('click', function(ev){
     $('fecha').value = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
     return;
   }
+  if(t.hasAttribute('data-vista')){ irAVista(t.getAttribute('data-vista')); return; }
+  if(t.hasAttribute('data-q')){
+    var paso = parseInt(t.getAttribute('data-q'), 10);
+    if(paso === 0) _qVista = null;
+    else {
+      var nv = qActual() + paso;
+      _qVista = (nv < 0 || nv > 23) ? qActual() : nv;
+    }
+    renderPlan();
+    if(S.cfg.url && navigator.onLine) planTraer(false);
+    return;
+  }
   if(t.hasAttribute('data-edit')){ editar(t.getAttribute('data-edit')); return; }
   if(t.hasAttribute('data-del')){ eliminar(t.getAttribute('data-del')); return; }
 });
@@ -486,6 +577,7 @@ document.addEventListener('click', function(ev){
 $('btn-guardar').addEventListener('click', onGuardar);
 $('btn-cancel-edit').addEventListener('click', function(){ limpiarForm(); });
 $('btn-sync').addEventListener('click', function(){ sync(true); });
+$('btn-pl-ref').addEventListener('click', function(){ planTraer(true); });
 
 $('btn-cfg').addEventListener('click', function(){
   $('cfg-url').value = S.cfg.url;
@@ -530,8 +622,178 @@ $('btn-borrar').addEventListener('click', function(){
   S.items = []; guardar(); render(); toast('Local vacío');
 });
 
-window.addEventListener('online', function(){ sync(false); });
+window.addEventListener('online',  function(){ renderEstado(); sync(false); });
+window.addEventListener('offline', function(){ renderEstado(); });
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) sync(false); });
+
+/* ---------- service worker: que la app abra sin señal ---------- */
+if('serviceWorker' in navigator && window.isSecureContext){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js')
+      .then(function(reg){
+        // Si hay una versión nueva esperando, la activamos en la próxima apertura
+        reg.addEventListener('updatefound', function(){
+          var nuevo = reg.installing;
+          if(!nuevo) return;
+          nuevo.addEventListener('statechange', function(){
+            if(nuevo.state === 'installed' && navigator.serviceWorker.controller){
+              toast('Hay una versión nueva · ciérrala y ábrela otra vez');
+            }
+          });
+        });
+      })
+      .catch(function(e){ console.warn('service worker no registrado:', e.message); });
+  });
+}
+
+/* ---------- vista Planeador ---------- */
+var _qVista = null;     // índice 0-23 que se está viendo; null = la de hoy
+
+function qHoy(){
+  var d = new Date();
+  return d.getMonth()*2 + (d.getDate()<=15 ? 0 : 1);
+}
+function qActual(){ return _qVista===null ? qHoy() : _qVista; }
+
+function etiquetaQ(j){
+  var M = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return M[Math.floor(j/2)] + ' ' + (j%2===0 ? '1ª' : '2ª');
+}
+
+// Rango de fechas ISO de una quincena, en el año del resumen
+function rangoDeQ(j, anio){
+  var mes = Math.floor(j/2) + 1;
+  var mm = (mes<10?'0':'') + mes;
+  return j%2===0
+    ? { ini:anio+'-'+mm+'-01', fin:anio+'-'+mm+'-15' }
+    : { ini:anio+'-'+mm+'-16', fin:anio+'-'+mm+'-31' };
+}
+
+// Lo que YO capturé en esa quincena (de los datos locales)
+function capturadoEnQ(j, anio){
+  var r = rangoDeQ(j, anio), t = 0;
+  vivos().forEach(function(i){
+    if(i.tipo!=='Egreso') return;
+    if(i.fecha>=r.ini && i.fecha<=r.fin) t += i.monto;
+  });
+  return t;
+}
+
+function renderPlan(){
+  var p = S.plan;
+  var j = qActual();
+  $('pl-titulo').textContent = etiquetaQ(j) + (p && p.anio ? ' ' + p.anio : '');
+
+  if(!p || !p.quincenas){
+    $('pl-rem').textContent = '—';
+    $('pl-rem').style.color = '#D6CFC4';
+    $('pl-sub').textContent = S.cfg.url
+      ? 'Toca Actualizar para traer el Planeador'
+      : 'Configura la conexión con el engrane ⚙';
+    $('pl-ing').textContent = $('pl-gas').textContent = $('pl-cap').textContent = $('pl-mes').textContent = '—';
+    $('pl-barra').style.width = '0%';
+    $('pl-lista').innerHTML = '<div class="vacio">Sin datos del Planeador todavía.</div>';
+    $('pl-sello').textContent = '';
+    return;
+  }
+
+  var q = p.quincenas[j] || { ingresos:0, gastos:0, remanente:0 };
+  var cap = capturadoEnQ(j, p.anio);
+  var rem = q.remanente - cap;
+
+  $('pl-rem').textContent = mxn(rem);
+  $('pl-rem').style.color = rem >= 0 ? '#107C41' : '#DC2626';
+  $('pl-sub').textContent = rem >= 0
+    ? 'te queda después de lo planeado y lo capturado'
+    : 'vas por encima de lo planeado';
+
+  var usado = q.gastos + cap;
+  var pct = q.ingresos > 0 ? Math.min(100, Math.round(usado / q.ingresos * 100)) : 0;
+  $('pl-barra').style.width = pct + '%';
+  $('pl-barra').style.background = pct > 100 || rem < 0 ? '#DC2626' : (pct > 85 ? '#F5BD4F' : '#107C41');
+
+  $('pl-ing').textContent = mxn(q.ingresos);
+  $('pl-gas').textContent = mxn(q.gastos);
+  $('pl-cap').textContent = mxn(cap);
+
+  // Mes completo = las dos quincenas del mes
+  var base = Math.floor(j/2)*2;
+  var mI = 0, mG = 0;
+  [base, base+1].forEach(function(k){
+    var x = p.quincenas[k]; if(!x) return;
+    mI += x.ingresos; mG += x.gastos + capturadoEnQ(k, p.anio);
+  });
+  $('pl-mes').textContent = mxn(mI - mG);
+  $('pl-mes').style.color = (mI - mG) >= 0 ? '#107C41' : '#DC2626';
+
+  // Lista: lo planeado de esa quincena (solo si es la quincena que trajo el resumen)
+  var det = (p.quincena === j) ? (p.detalle || []) : null;
+  if(det === null){
+    $('pl-hd').textContent = 'Movimientos de la quincena';
+    $('pl-lista').innerHTML = '<div class="vacio">Toca Actualizar para ver el detalle de ' + esc(etiquetaQ(j)) + '.</div>';
+  } else if(!det.length){
+    $('pl-hd').textContent = 'Movimientos de la quincena';
+    $('pl-lista').innerHTML = '<div class="vacio">Nada planeado en esta quincena.</div>';
+  } else {
+    $('pl-hd').textContent = 'Planeado · ' + det.length + ' concepto' + (det.length>1?'s':'');
+    $('pl-lista').innerHTML = det.map(function(d){
+      var ing = d.tipo === 'ingreso';
+      return '<div class="pl">' +
+        '<div class="c">' + esc(d.concepto || '(sin concepto)') +
+          '<div class="m2">' + esc(d.metodo || '') + '</div></div>' +
+        '<div class="v" style="color:' + (ing ? '#107C41' : '#DC2626') + '">' +
+          (ing ? '+' : '-') + mxn(d.monto) + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  $('pl-sello').textContent = 'Planeador respaldado el ' + (p.respaldado || '—') +
+                             ' · ' + (p.filas || 0) + ' filas';
+}
+
+function planTraer(manual){
+  if(!S.cfg.url){ if(manual) toast('Falta configurar la conexión (⚙)'); return; }
+  var btn = $('btn-pl-ref');
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ …'; }
+  function fin(){ if(btn){ btn.disabled = false; btn.textContent = '↻ Actualizar'; } }
+
+  var u = S.cfg.url + (S.cfg.url.indexOf('?')<0?'?':'&') +
+          'token=' + encodeURIComponent(S.cfg.token) +
+          '&accion=resumen&q=' + qActual();
+
+  fetch(u, { redirect:'follow' })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      fin();
+      if(!j || !j.ok) throw new Error((j && j.error) || 'respuesta inválida');
+      if(!j.resumen || !j.resumen.hay){
+        if(manual) toast('El Planeador todavía no ha respaldado nada');
+        return;
+      }
+      S.plan = j.resumen;
+      guardar(); renderPlan();
+      if(manual) toast('Planeador actualizado');
+    })
+    .catch(function(e){
+      fin();
+      if(manual) toast(navigator.onLine ? ('No se pudo: ' + e.message) : 'Sin red · se muestra lo guardado');
+    });
+}
+
+function irAVista(v){
+  ['capturar','planeador'].forEach(function(x){
+    var s = $('v-' + x); if(s) s.classList.toggle('on', x === v);
+  });
+  var bts = document.querySelectorAll('.tab-btn');
+  for(var i=0;i<bts.length;i++){
+    bts[i].classList.toggle('on', bts[i].getAttribute('data-vista') === v);
+  }
+  if(v === 'planeador'){
+    renderPlan();
+    if(S.cfg.url && navigator.onLine) planTraer(false);
+  }
+  window.scrollTo({ top:0 });
+}
 
 /* ---------- init ---------- */
 $('fecha').value = hoyISO();
