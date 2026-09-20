@@ -40,6 +40,13 @@ main{padding:12px;max-width:560px;margin:0 auto}
 .tipo button.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .tipo button.on[data-tipo="Egreso"]{color:#DC2626}
 .tipo button.on[data-tipo="Ingreso"]{color:#107C41}
+.quien{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#F1EDE6;padding:4px;border-radius:12px;margin-bottom:12px}
+.quien button{border:0;background:transparent;padding:11px;border-radius:9px;font-size:15px;font-weight:700;color:#8A8177;letter-spacing:.4px}
+.quien button.on[data-quien="LDMA"]{background:#3F2A14;color:#F5BD4F}
+.quien button.on[data-quien="CTML"]{background:#6D28D9;color:#fff}
+.pill{display:inline-block;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:999px;letter-spacing:.3px;vertical-align:middle}
+.pill.LDMA{background:#F5E6C8;color:#5B4227}
+.pill.CTML{background:#EDE4FF;color:#5B21B6}
 .monto-wrap{display:flex;align-items:center;gap:6px;border:2px solid #E7E2DA;border-radius:14px;padding:6px 12px;background:#FCFBF9}
 .monto-wrap:focus-within{border-color:#F5BD4F;background:#fff}
 .monto-wrap .cur{font-size:26px;color:#8A8177;font-weight:600}
@@ -192,6 +199,11 @@ input:focus{border-color:#F5BD4F}
   </div>
 
   <section class="card">
+    <div class="quien">
+      <button class="quien-btn on" data-quien="LDMA">LDMA</button>
+      <button class="quien-btn" data-quien="CTML">CTML</button>
+    </div>
+
     <div class="tipo">
       <button class="tipo-btn on" data-tipo="Egreso">Egreso</button>
       <button class="tipo-btn" data-tipo="Ingreso">Ingreso</button>
@@ -266,7 +278,7 @@ input:focus{border-color:#F5BD4F}
 (function(){
 'use strict';
 
-var VER = 'captura v5';
+var VER = 'captura v6';
 var KEY = 'CAPTURA_V1';
 
 var CATS_EGRESO = [
@@ -280,11 +292,12 @@ var METODOS = ['AMEX PLATINUM','PALACIO DE HIERRO','Efectivo','Débito','Transfe
 
 var S = cargar();
 var editandoId = null;
-var form = { tipo:'Egreso', cat:S.last.cat || '', metodo:S.last.metodo || 'AMEX PLATINUM' };
+var form = { tipo:'Egreso', cat:S.last.cat || '', metodo:S.last.metodo || 'AMEX PLATINUM',
+             quien:S.last.quien || 'LDMA' };
 
 /* ---------- almacenamiento ---------- */
 function base(){
-  return { cfg:{url:'',token:''}, items:[], catsExtra:[], uso:{}, plan:null, last:{cat:'',metodo:'AMEX PLATINUM'} };
+  return { cfg:{url:'',token:''}, items:[], catsExtra:[], uso:{}, plan:null, last:{cat:'',metodo:'AMEX PLATINUM',quien:'LDMA'} };
 }
 function cargar(){
   var d = base();
@@ -297,7 +310,9 @@ function cargar(){
     d.catsExtra = Array.isArray(o.catsExtra)? o.catsExtra : [];
     d.uso  = (o.uso && typeof o.uso==='object') ? o.uso : {};
     d.plan = (o.plan && typeof o.plan==='object') ? o.plan : null;
-    d.last = { cat:(o.last&&o.last.cat)||'', metodo:(o.last&&o.last.metodo)||'AMEX PLATINUM' };
+    d.items.forEach(function(i){ if(!i.quien) i.quien = 'LDMA'; });   // v6
+    d.last = { cat:(o.last&&o.last.cat)||'', metodo:(o.last&&o.last.metodo)||'AMEX PLATINUM',
+               quien:(o.last&&o.last.quien)||'LDMA' };
     return d;
   }catch(e){ return d; }
 }
@@ -374,6 +389,10 @@ function renderChips(){
   for(var k=0;k<bts.length;k++){
     bts[k].classList.toggle('on', bts[k].getAttribute('data-tipo')===form.tipo);
   }
+  var qbs = document.querySelectorAll('.quien-btn');
+  for(var q=0;q<qbs.length;q++){
+    qbs[q].classList.toggle('on', qbs[q].getAttribute('data-quien')===form.quien);
+  }
   $('btn-guardar').textContent = editandoId ? 'Actualizar movimiento'
     : (form.tipo==='Egreso' ? 'Guardar gasto' : 'Guardar ingreso');
   $('btn-guardar').classList.toggle('edit', !!editandoId);
@@ -411,6 +430,7 @@ function renderLista(){
     return (i.cat||'').toLowerCase().indexOf(q) >= 0
         || (i.nota||'').toLowerCase().indexOf(q) >= 0
         || (i.metodo||'').toLowerCase().indexOf(q) >= 0
+        || (i.quien||'LDMA').toLowerCase().indexOf(q) >= 0
         || String(i.monto).indexOf(q) >= 0;
   }) : todos;
 
@@ -432,7 +452,9 @@ function renderLista(){
   var h = '';
   vista.forEach(function(i){
     var st = i.estado==='ok' ? '<span class="st" title="En la hoja">✓</span>' : '<span class="st" title="Pendiente">⏳</span>';
-    var sub = esc(i.fecha) + ' · ' + esc(i.metodo) + (i.nota ? ' · ' + esc(i.nota) : '');
+    var qn = (i.quien === 'CTML') ? 'CTML' : 'LDMA';
+    var sub = '<span class="pill ' + qn + '">' + qn + '</span> ' +
+              esc(i.fecha) + ' · ' + esc(i.metodo) + (i.nota ? ' · ' + esc(i.nota) : '');
     h += '<div class="item' + (editandoId===i.id ? ' editando' : '') + '" data-id="'+esc(i.id)+'">' +
            st +
            '<div class="txt" data-edit="'+esc(i.id)+'">' +
@@ -473,7 +495,8 @@ function render(){ renderChips(); renderTotales(); renderLista(); renderEstado()
 /* ---------- sincronización ---------- */
 function payload(i){
   return { id:i.id, fecha:i.fecha, tipo:i.tipo, monto:i.monto, cat:i.cat,
-           metodo:i.metodo, nota:i.nota||'', accion:(i.estado==='del'?'delete':'upsert') };
+           metodo:i.metodo, nota:i.nota||'', quien:i.quien||'LDMA',
+           accion:(i.estado==='del'?'delete':'upsert') };
 }
 
 function sync(manual){
@@ -534,19 +557,21 @@ function onGuardar(){
     if(it){
       it.fecha = fecha; it.tipo = form.tipo; it.monto = monto;
       it.cat = form.cat; it.metodo = form.metodo; it.nota = $('nota').value.trim();
+      it.quien = form.quien;
       it.estado = 'pend'; it.ts = Date.now();
     }
     toast('Movimiento actualizado');
   }else{
     S.items.push({
       id:uid(), fecha:fecha, tipo:form.tipo, monto:monto, cat:form.cat,
-      metodo:form.metodo, nota:$('nota').value.trim(), estado:'pend', ts:Date.now()
+      metodo:form.metodo, nota:$('nota').value.trim(), quien:form.quien,
+      estado:'pend', ts:Date.now()
     });
     toast((form.tipo==='Egreso'?'Gasto':'Ingreso') + ' guardado · ' + mxn(monto));
   }
 
   S.uso[form.cat] = (S.uso[form.cat]||0) + 1;
-  S.last = { cat:form.cat, metodo:form.metodo };
+  S.last = { cat:form.cat, metodo:form.metodo, quien:form.quien };
   guardar(); limpiarForm(); render(); renderPlan(); sync(false);
 }
 
@@ -555,6 +580,7 @@ function editar(id){
   if(!it) return;
   editandoId = id;
   form.tipo = it.tipo; form.cat = it.cat; form.metodo = it.metodo;
+  form.quien = it.quien || 'LDMA';
   $('monto').value = it.monto;
   $('nota').value = it.nota || '';
   $('fecha').value = it.fecha;
@@ -577,7 +603,7 @@ function eliminar(id){
 
 /* ---------- eventos ---------- */
 document.addEventListener('click', function(ev){
-  var t = ev.target.closest('[data-cat],[data-met],[data-addcat],[data-tipo],[data-dia],[data-edit],[data-del],[data-vista],[data-q]');
+  var t = ev.target.closest('[data-cat],[data-met],[data-addcat],[data-tipo],[data-dia],[data-edit],[data-del],[data-vista],[data-q],[data-quien]');
   if(!t) return;
 
   if(t.hasAttribute('data-cat')){ form.cat = t.getAttribute('data-cat'); renderChips(); return; }
@@ -602,6 +628,7 @@ document.addEventListener('click', function(ev){
     $('fecha').value = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
     return;
   }
+  if(t.hasAttribute('data-quien')){ form.quien = t.getAttribute('data-quien'); renderChips(); return; }
   if(t.hasAttribute('data-vista')){ irAVista(t.getAttribute('data-vista')); return; }
   if(t.hasAttribute('data-q')){
     var paso = parseInt(t.getAttribute('data-q'), 10);
