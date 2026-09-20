@@ -21,7 +21,9 @@ var CARPETA = 'Planeador Respaldos';   // se crea sola en tu Drive
 var MAX_BK  = 10;                      // cuántas versiones conservar
 
 var COLS = ['ID', 'Fecha', 'Mes', 'Quincena', 'Tipo', 'Monto',
-            'Categoria', 'Metodo', 'Nota', 'Capturado'];
+            'Categoria', 'Metodo', 'Nota', 'Quien', 'Capturado'];
+
+var QUIEN_DEFAULT = 'LDMA';   // si un movimiento llega sin persona
 
 /* ─────────────── hoja ─────────────── */
 
@@ -41,7 +43,25 @@ function _hoja() {
     sh.setColumnWidth(7, 170);
     sh.setColumnWidth(8, 150);
     sh.setColumnWidth(9, 220);
-    sh.setColumnWidth(10, 150);
+    sh.setColumnWidth(10, 90);
+    sh.setColumnWidth(11, 150);
+  } else {
+    // La hoja ya existía: agregar la columna "Quien" si le falta (v70)
+    var ancho = sh.getLastColumn();
+    var hdr = sh.getRange(1, 1, 1, Math.max(ancho, COLS.length)).getValues()[0];
+    if (hdr.indexOf('Quien') < 0) {
+      sh.insertColumnBefore(10);                 // queda entre Nota y Capturado
+      sh.getRange(1, 10).setValue('Quien')
+        .setFontWeight('bold').setFontColor('#F5BD4F').setBackground('#3F2A14');
+      sh.setColumnWidth(10, 90);
+      var n = sh.getLastRow();
+      if (n > 1) {
+        // lo que ya estaba capturado se asigna al valor por defecto
+        var vals = [];
+        for (var i = 0; i < n - 1; i++) vals.push([QUIEN_DEFAULT]);
+        sh.getRange(2, 10, n - 1, 1).setValues(vals);
+      }
+    }
   }
   return sh;
 }
@@ -76,6 +96,7 @@ function _fila(it) {
     String(it.cat || ''),
     String(it.metodo || ''),
     String(it.nota || ''),
+    String(it.quien || QUIEN_DEFAULT).toUpperCase(),
     Utilities.formatDate(new Date(), 'America/Mexico_City', 'yyyy-MM-dd HH:mm')
   ];
 }
@@ -322,7 +343,8 @@ function doGet(e) {
     out.push({
       id: String(r[0]), fecha: f, mes: String(r[2]), quincena: Number(r[3]) || _quincena(f),
       tipo: String(r[4]), monto: Number(r[5]) || 0, cat: String(r[6]),
-      metodo: String(r[7]), nota: String(r[8])
+      metodo: String(r[7]), nota: String(r[8]),
+      quien: String(r[9] || QUIEN_DEFAULT).toUpperCase()
     });
   }
 
